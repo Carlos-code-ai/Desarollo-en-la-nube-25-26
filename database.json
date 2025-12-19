@@ -1,0 +1,188 @@
+{
+  "message": "Hello from the database!",
+  "usuarios": {
+    "user1": {
+      "username": "john_doe",
+      "password": "password123",
+      "email": "john.doe@example.com",
+      "nombre": "John",
+      "apellidos": "Doe",
+      "DNI": "12345678A",
+      "telefono": "123456789",
+      "direccion": "123 Main St",
+      "isAdmin": false,
+      "perfilUsuario": "perfil1"
+    },
+    "user2": {
+        "username": "jane_doe",
+        "password": "password456",
+        "email": "jane.doe@example.com",
+        "nombre": "Jane",
+        "apellidos": "Doe",
+        "DNI": "87654321B",
+        "telefono": "987654321",
+        "direccion": "456 Oak Ave",
+        "isAdmin": true,
+        "perfilUsuario": "perfil2"
+    }
+  },
+  "perfilesUsuario": {
+    "perfil1": {
+      "descripcion": "Amante de la moda y los trajes elegantes.",
+      "puntuacionMediaTotal": 4.5,
+      "listaPublicaciones": ["traje1"],
+      "listaFavoritos": ["traje2"],
+      "historialValoraciones": ["valoracion1"],
+      "listaChats": ["chat1"],
+      "suscripcion": "suscripcion1",
+      "listaReservas": ["reserva1"],
+      "listaPagos": ["pago1"],
+      "listaCheckinOut": ["checkin1"],
+      "listaEntregas": ["entrega1"]
+    },
+    "perfil2": {
+        "descripcion": "CEO de una empresa de moda.",
+        "puntuacionMediaTotal": 5,
+        "listaPublicaciones": ["traje2"],
+        "listaFavoritos": [],
+        "historialValoraciones": [],
+        "listaChats": ["chat1"],
+        "suscripcion": null,
+        "listaReservas": [],
+        "listaPagos": [],
+        "listaCheckinOut": [],
+        "listaEntregas": []
+      }
+  },
+  "trajes": {
+    "traje1": {
+      "fotos": ["url_foto1.jpg", "url_foto2.jpg"],
+      "talla": "M",
+      "marca": "Marca Famosa",
+      "color": "Negro",
+      "tejido": "Lana",
+      "estilo": "Clasico",
+      "estado": "Nuevo",
+      "tipoEvento": "Gala",
+      "precio": 100,
+      "disponibilidad": ["2024-12-01", "2024-12-15"],
+      "descripcion": "Traje elegante para ocasiones especiales.",
+      "reportes": [],
+      "usuario": "user1",
+      "publicadoPor": "perfil1",
+      "alquiladoPor": null,
+      "favoritos": ["perfil1"]
+    },
+    "traje2": {
+        "fotos": ["url_foto3.jpg", "url_foto4.jpg"],
+        "talla": "L",
+        "marca": "Otra Marca",
+        "color": "Azul",
+        "tejido": "Seda",
+        "estilo": "Moderno",
+        "estado": "Usado",
+        "tipoEvento": "Boda",
+        "precio": 150,
+        "disponibilidad": ["2024-11-20"],
+        "descripcion": "Traje moderno y llamativo.",
+        "reportes": [],
+        "usuario": "user2",
+        "publicadoPor": "perfil2",
+        "alquiladoPor": null,
+        "favoritos": []
+      }
+  },
+  "suscripciones": {
+    "suscripcion1": {
+      "precio": 9.99,
+      "duracion": "Mensual",
+      "fechaInicio": "2024-01-01",
+      "fechaFin": "2024-02-01",
+      "usuario": "user1"
+    }
+  },
+  "valoraciones": {
+    "valoracion1": {
+      "puntuacion": 5,
+      "comentario": "Excelente traje, muy buen servicio.",
+      "fecha": "2024-10-28",
+      "usuarioQueValora": "user2",
+      "idPerfilUsuario": "perfil1"
+    }
+  },
+  "chats": {
+    "chat1": {
+      "participantes": ["perfil1", "perfil2"],
+      "listaMensajes": ["mensaje1", "mensaje2"],
+      "trajeRelacionado": "traje1"
+    }
+  },
+  "mensajes": {
+    "mensaje1": {
+      "emisor": "perfil1",
+      "contenido": "Hola, estoy interesado en tu traje.",
+      "fechaHora": "2024-10-27T10:00:00Z"
+    },
+    "mensaje2": {
+      "emisor": "perfil2",
+      "contenido": "Hola, claro, dime que necesitas saber.",
+      "fechaHora": "2024-10-27T10:05:00Z"
+    }
+  },
+  "favoritos": {
+      "favorito1": {
+          "usuario": "perfil1",
+          "traje": "traje2"
+      }
+  },
+  "reservas": {
+      "reserva1": {
+          "estado": "confirmada",
+          "cliente": "perfil1",
+          "traje": "traje1",
+          "pago": "pago1",
+          "entrega": "entrega1",
+          "checkinout": "checkin1",
+          "fechaInicio": "2024-12-01",
+          "fechaFin": "2024-12-05",
+          "precioTotal": 120,
+          "modoEntrega": "domicilio"
+      }
+  },
+  "checkinCheckouts": {
+      "checkin1": {
+          "foto": "url_checkin.jpg",
+          "fechaCheckIn": "2024-12-01",
+          "fechaCheckOut": "2024-12-05",
+          "estado": "completado",
+          "descripcion": "El traje se devolvio en perfectas condiciones.",
+          "reservaAsociada": "reserva1"
+      }
+  },
+  "entregas": {
+      "entrega1": {
+          "direccion": "123 Main St",
+          "geolocalizacion": "40.7128,-74.0060",
+          "estado": "entregado",
+          "costeEnvio": 20,
+          "reservaAsociada": "reserva1"
+      }
+  },
+  "pagos": {
+      "pago1": {
+          "fecha": "2024-11-15",
+          "cantidad": 120,
+          "metodoPago": "PayPal",
+          "estado": "completado"
+      }
+  },
+  "reportes": {
+      "reporte1": {
+          "razon": "Daños en el traje",
+          "descripcion": "El traje tiene una mancha que no estaba.",
+          "reportador": "perfil2",
+          "trajeReportado": "traje1",
+          "estado": "pendiente"
+      }
+  }
+}

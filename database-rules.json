@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "suits": {
+      ".read": "true",
+      "$suitId": {
+        // Allow write only if user is logged in and the suit's userId matches their own uid.
+        ".write": "auth != null && newData.child('userId').val() === auth.uid",
+        
+        // Ensure all required fields are present when writing.
+        ".validate": "newData.hasChildren(['name', 'description', 'size', 'color', 'price', 'imageUrl', 'isAvailable', 'userId'])"
+      }
+    }
+  }
+}

@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase.js';
 import { ref, onValue, push } from 'firebase/database';
-import useAuth from '../hooks/useAuth.js'; // <-- 1. IMPORTAR useAuth
+import useAuth from '../hooks/useAuth.js';
 
-// --- Sub-componentes (sin cambios) ---
 const SizeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h12M3.75 3h16.5M3.75 12h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" /></svg>;
 const EventIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345h5.518a.562.562 0 01.321.988l-4.204 3.055a.563.563 0 00-.182.557l1.528 4.7-3.976-2.888a.563.563 0 00-.64 0L7.02 21.03l1.528-4.7a.563.563 0 00-.182-.557l-4.204-3.055a.563.563 0 01.321-.988h5.518a.563.563 0 00.475-.345L11.48 3.5z" /></svg>;
 const ConditionIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.998 15.998 0 011.622-3.385m5.043.025a15.998 15.998 0 001.622-3.385m3.388 1.62a15.998 15.998 0 00-1.622 3.385m-5.043-.025a15.998 15.998 0 01-3.388-1.62m-1.622 3.385a15.998 15.998 0 01-3.388 1.62m16.5 0a48.11 48.11 0 00-16.5 0" /></svg>;
@@ -18,9 +17,8 @@ const DetailItem = ({ icon, title, value }) => (
     </div>
 );
 
-// --- Componente Principal ---
 const SuitDetailPage = ({ suitId, onBack }) => {
-  const { user } = useAuth(); // <-- 2. OBTENER USUARIO ACTUAL
+  const { user } = useAuth();
   const [suit, setSuit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,11 +32,11 @@ const SuitDetailPage = ({ suitId, onBack }) => {
     setLoading(true);
     const unsubscribe = onValue(suitRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) setSuit({...data, id: suitId });
+      if (data) setSuit({ ...data, id: suitId });
       else setError('No se pudo encontrar el traje.');
       setLoading(false);
     }, (err) => {
-      console.error(err); 
+      console.error(err);
       setError('Error al cargar el traje.');
       setLoading(false);
     });
@@ -46,7 +44,7 @@ const SuitDetailPage = ({ suitId, onBack }) => {
   }, [suitId]);
 
   useEffect(() => {
-    if (startDate && endDate && suit.price) {
+    if (startDate && endDate && suit && suit.price) {
         const start = new Date(startDate);
         const end = new Date(endDate);
         const diffTime = Math.abs(end - start);
@@ -58,8 +56,7 @@ const SuitDetailPage = ({ suitId, onBack }) => {
   }, [startDate, endDate, suit]);
 
   const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
-  
-  // --- 3. LÓGICA DE ALQUILER ACTUALIZADA ---
+
   const handleRental = async () => {
       if (!user) {
           alert('Debes iniciar sesión para alquilar un traje.');
@@ -67,6 +64,12 @@ const SuitDetailPage = ({ suitId, onBack }) => {
       }
       if (!startDate || !endDate) {
           alert('Por favor, selecciona un rango de fechas válido.');
+          return;
+      }
+      // *** NUEVA COMPROBACIÓN ***
+      if (!suit.ownerId) {
+          alert("Error crítico: Este traje no tiene un propietario asignado y no puede ser alquilado. Por favor, contacta con soporte.");
+          console.error("Fallo en handleRental: El objeto 'suit' no contiene 'ownerId'.", suit);
           return;
       }
 
@@ -81,15 +84,13 @@ const SuitDetailPage = ({ suitId, onBack }) => {
           startDate,
           endDate,
           totalPrice,
-          status: 'pending', // El propietario deberá confirmar
-          createdAt: new Date().toISOString(),
+          status: 'pending',
       };
 
       try {
           const rentalsRef = ref(db, 'alquileres');
           await push(rentalsRef, rentalData);
-          alert(`¡Solicitud de alquiler enviada!\nRecibirás una notificación cuando ${suit.ownerName} confirme la reserva.`);
-          // Opcional: Redirigir o limpiar fechas
+          alert(`¡Solicitud de alquiler enviada!\nRecibirás una notificación cuando ${suit.ownerName || 'el propietario'} confirme la reserva.`);
           setStartDate(null);
           setEndDate(null);
       } catch (error) {
@@ -120,10 +121,10 @@ const SuitDetailPage = ({ suitId, onBack }) => {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface">{suit.name}</h1>
             <p className="text-3xl font-light text-primary mt-2">€{suit.price}<span className="text-lg font-normal text-on-surface-variant">/día</span></p>
             <div className="flex items-center gap-3 my-6 p-3 bg-surface-container rounded-2xl">
-                <img src={suit.ownerPhotoURL || 'https://i.pravatar.cc/150?u=a042f81f4e29026704d'} alt={suit.ownerName} className="w-12 h-12 rounded-full"/>
+                <img src={suit.ownerPhotoURL || 'https://i.pravatar.cc/150?u=a042581f4e29026704d'} alt={suit.ownerName || 'Propietario no disponible'} className="w-12 h-12 rounded-full"/>
                 <div>
                     <p className="text-sm text-on-surface-variant">Propietario</p>
-                    <p className="font-bold text-on-surface">{suit.ownerName || 'Usuario Anónimo'}</p>
+                    <p className="font-bold text-on-surface">{suit.ownerName || 'Dato no disponible'}</p>
                 </div>
             </div>
             <div className="bg-surface-container p-4 rounded-2xl mb-6">

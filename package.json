@@ -4,17 +4,22 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@craco/craco": "^7.1.0",
+    "@gsap/react": "^2.1.2",
+    "@mui/icons-material": "^7.3.6",
     "firebase": "^12.7.0",
     "firebase-admin": "^13.6.0",
+    "gsap": "^3.14.2",
     "react": "^18.2.0",
+    "react-day-picker": "^9.13.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.11.0",
     "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -34,5 +39,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18"
   }
 }

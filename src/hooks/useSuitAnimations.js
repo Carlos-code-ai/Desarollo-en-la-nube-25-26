@@ -1,36 +1,38 @@
-
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useRef } from 'react';
 
 gsap.registerPlugin(ScrollTrigger);
 
-/**
- * Hook personalizado para aplicar animaciones de entrada escalonadas
- * a las tarjetas de los trajes en el catálogo cuando el usuario hace scroll.
- */
 const useSuitAnimations = () => {
+  // 1. Crear una referencia para el contenedor de la grid
+  const containerRef = useRef(null);
+
   useGSAP(() => {
-    // Seleccionamos todas las tarjetas de trajes
-    const suitCards = gsap.utils.toArray('.suit-card');
+    // Si el contenedor no existe, no hacemos nada.
+    if (!containerRef.current) return;
 
-    if (suitCards.length === 0) return;
-
-    // Animación de entrada para cada tarjeta
-    gsap.from(suitCards, {
-      opacity: 0,       // Empiezan invisibles
-      y: 50,            // Ligeramente desplazadas hacia abajo
-      duration: 0.6,    // Duración de la animación
-      ease: 'power3.out', // Curva de easing para una transición suave
-      stagger: 0.15,    // Retraso entre la animación de cada tarjeta
+    // Animación de entrada para las tarjetas dentro del contenedor
+    gsap.from(".suit-card", { // La clase target sigue siendo la misma
+      opacity: 0,
+      y: 50,
+      duration: 0.6,
+      ease: 'power3.out',
+      stagger: 0.15,
       scrollTrigger: {
-        trigger: '.grid', // El contenedor de las tarjetas actúa como disparador
-        start: 'top 80%', // La animación empieza cuando el 80% superior del grid entra en el viewport
-        toggleActions: 'play none none none', // Solo se ejecuta una vez al entrar
+        // 2. Usar la referencia directa como disparador para máxima precisión
+        trigger: containerRef.current,
+        start: 'top 85%', // Ajustamos ligeramente el inicio para mejor visibilidad
+        toggleActions: 'play none none none',
       },
     });
 
-  }, { dependencies: [] }); // El array vacío asegura que solo se ejecute una vez
+  // 3. El scope y las dependencias aseguran que GSAP se ejecute en el contexto correcto
+  }, { scope: containerRef, dependencies: [] });
+
+  // 4. Devolver la referencia para que el componente la pueda usar
+  return { containerRef };
 };
 
 export default useSuitAnimations;

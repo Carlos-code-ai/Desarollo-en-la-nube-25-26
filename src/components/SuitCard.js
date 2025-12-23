@@ -1,29 +1,68 @@
-
 import React from 'react';
 
-const SuitCard = ({ suit, onSelect }) => { // Recibimos el traje completo y la función onSelect
+// --- Skeleton Card ---
+export const SuitCardSkeleton = () => (
+  <div className="bg-surface rounded-3xl shadow-lg animate-pulse">
+    <div className="aspect-[3/4] bg-surface-variant rounded-t-3xl"></div>
+    <div className="p-4">
+      <div className="h-6 bg-surface-variant rounded w-3/4 mb-2"></div>
+      <div className="h-4 bg-surface-variant rounded w-1/2"></div>
+    </div>
+  </div>
+);
+
+
+// --- Main Suit Card Component ---
+const SuitCard = ({ suit, onSelect }) => {
+  // Extraemos los nuevos campos con valores por defecto
+  const { 
+    name = 'Traje Elegante', 
+    price = 99, 
+    size = 'M', 
+    imageUrl, 
+    eventType = 'Gala', // Valor por defecto para el tipo de evento
+  } = suit;
+
+  // Función para capitalizar la primera letra
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
   return (
     <div 
-      className="group suit-card bg-white rounded-3xl shadow-sm overflow-hidden transition-shadow duration-300 hover:shadow-2xl cursor-pointer" 
-      onClick={onSelect} // Hacemos la tarjeta clickeable
+      className="suit-card group cursor-pointer bg-surface rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+      onClick={() => onSelect(suit.id)} 
     >
-      <div className="relative">
-        <img 
-          src={suit.photos ? suit.photos[0] : ''} 
-          alt={suit.title} 
-          className="w-full h-80 object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
+      {/* Contenedor de la Imagen con elementos superpuestos */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-3xl">
+        <img
+          src={imageUrl || 'https://via.placeholder.com/400x533.png/f0f0f0/333333?text=Ready2Wear'}
+          alt={name}
+          className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-        <div className="absolute bottom-0 left-0 p-4">
-          <h3 className="text-white text-lg font-bold">{suit.title}</h3>
+        
+        {/* Insignia de Tipo de Evento */}
+        {eventType && (
+            <div className="absolute top-3 left-3 bg-primary/80 backdrop-blur-sm text-on-primary text-xs font-semibold px-3 py-1 rounded-full">
+                {capitalize(eventType)}
+            </div>
+        )}
+
+        {/* Icono de Favorito (funcionalidad futura) */}
+        <div className="absolute top-3 right-3 h-8 w-8 grid place-items-center bg-background/70 backdrop-blur-sm rounded-full cursor-pointer hover:scale-110 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-on-surface">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
         </div>
       </div>
+      
+      {/* Contenido de la Tarjeta */}
       <div className="p-4">
-        <div className="flex justify-between items-center">
-          <p className="text-lg font-semibold text-neutral-800">${suit.pricePerDay}<span className="text-sm font-normal text-neutral-500">/día</span></p>
-          <span className="inline-block bg-yellow-200 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded-full">★ {suit.averageRating}</span>
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-semibold text-on-surface leading-tight">{name}</h3>
+            <p className="text-sm text-on-surface-variant">Talla: {size}</p>
+          </div>
         </div>
-        <p className="text-sm text-neutral-600 mt-1">Talla: {suit.size}</p>
+        <p className="mt-2 text-lg font-bold text-primary">€{price}<span className="text-sm font-normal text-on-surface-variant">/día</span></p>
       </div>
     </div>
   );

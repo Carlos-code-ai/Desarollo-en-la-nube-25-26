@@ -1,26 +1,25 @@
-
 import { initializeApp } from "firebase/app";
-// 1. Importar GoogleAuthProvider
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA5XbrF9jZJQ1fL3vjYJ5nI1dJ_r3e-vWc",
+  apiKey: "AIzaSyD8GWx4ry3hgM6jV0qtTMHBrT7JoWHQCAk",
   authDomain: "desarollogit-68916509-89c54.firebaseapp.com",
+  databaseURL: "https://desarollogit-68916509-89c54-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "desarollogit-68916509-89c54",
-  storageBucket: "desarollogit-68916509-89c54.appspot.com",
-  messagingSenderId: "84128038339",
-  appId: "1:84128038339:web:96500284b7a13825313f96"
+  storageBucket: "desarollogit-68916509-89c54.firebasestorage.app",
+  messagingSenderId: "464708937070",
+  appId: "1:464708937070:web:41e91b162694b2bb7c8d7f"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase Authentication
+// Initialize Firebase Authentication and export it
 export const auth = getAuth(app);
 
-// 2. Crear y exportar la instancia del proveedor de Google
+// Export the Google provider instance
 export const googleProvider = new GoogleAuthProvider();
 
-// Initialize Cloud Firestore
-export const db = getFirestore(app);
+// Initialize Realtime Database and export it
+export const db = getDatabase(app);

@@ -1,3 +1,34 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Paleta Material Design 3 (M3) - Tema Claro */
+    --color-primary: 38 97 219; /* Azul Real */
+    --color-on-primary: 255 255 255; /* Blanco */
+    --color-primary-container: 224 233 255;
+    --color-on-primary-container: 25 78 190;
+    
+    --color-secondary: 98 98 115;
+    --color-on-secondary: 255 255 255;
+    
+    --color-surface: 252 251 255; /* Blanco Roto/Gris muy claro */
+    --color-on-surface: 28 28 32;   /* Gris Oscuro (casi negro) */
+    
+    --color-surface-variant: 228 226 236;
+    --color-on-surface-variant: 69 69 77;
+    
+    --color-background: 248 248 252; /* Fondo ligeramente más oscuro */
+    --color-on-background: 28 28 32;
+
+    --color-outline: 188 188 200;
+    --color-error: 179 38 30;
+  }
+
+  body {
+    @apply bg-[rgb(var(--color-background))] text-[rgb(var(--color-on-background))] font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

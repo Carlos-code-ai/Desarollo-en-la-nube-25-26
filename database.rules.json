@@ -1,6 +1,31 @@
+
 {
   "rules": {
-    ".read": true,
-    ".write": true
+    // Reglas para la colección 'trajes'
+    "trajes": {
+      ".read": "auth != null", // Cualquiera autenticado puede leer la lista de trajes
+      ".indexOn": ["ownerId"], // Necesario para las queries de `MyItemsPage`
+      "$suitId": {
+        // Un usuario puede escribir (crear/actualizar) un traje si está autenticado
+        ".write": "auth != null && (newData.child('ownerId').val() === auth.uid || !data.exists())",
+        // La validación asegura que los campos necesarios existen y tienen el tipo correcto
+        ".validate": "newData.hasChildren(['suitName', 'size', 'price', 'description', 'imageUrl', 'ownerId']) && newData.child('suitName').isString() && newData.child('price').isNumber()"
+      }
+    },
+    // Reglas para la colección 'alquileres'
+    "alquileres": {
+      ".indexOn": ["renterId", "ownerId"], // Necesario para `MyRentalsPage`
+      // Solo se puede leer o escribir en la colección si el usuario está autenticado
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$rentalId": {
+         // Un usuario puede LEER un alquiler si es el arrendatario O el propietario del traje
+        ".read": "data.child('renterId').val() === auth.uid || data.child('ownerId').val() === auth.uid",
+        // Un usuario puede ESCRIBIR (crear) un nuevo alquiler si el renterId es el suyo
+        ".write": "newData.child('renterId').val() === auth.uid || data.child('ownerId').val() === auth.uid",
+        // Validar que los datos del alquiler son correctos al crear/actualizar
+        ".validate": "newData.hasChildren(['suitId', 'suitName', 'suitImageUrl', 'ownerId', 'renterId', 'renterName', 'renterPhotoURL', 'startDate', 'endDate', 'totalPrice', 'status'])"
+      }
+    }
   }
 }

@@ -14,11 +14,10 @@ const useDatabase = (path) => {
       try {
         const val = snapshot.val();
         if (val) {
-          // Convert the object of objects into an array of objects
           const dataArray = Object.keys(val).map(key => ({ ...val[key], id: key }));
           setData(dataArray);
         } else {
-          setData([]); // Handle case where there is no data
+          setData([]);
         }
       } catch (err) {
         setError(err);
@@ -26,15 +25,13 @@ const useDatabase = (path) => {
       }
       setLoading(false);
     }, (err) => {
-      // This is the error callback for onValue
       setError(err);
       setLoading(false);
       console.error("Error fetching data: ", err);
     });
 
-    // Cleanup function to unsubscribe from the listener when the component unmounts
     return () => unsubscribe();
-  }, [path]);
+  }, [path, Date.now()]);
 
   return { data, loading, error };
 };

@@ -1,22 +1,22 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import useAuth from './hooks/useAuth.js';
-import { auth } from './firebase.js';
 
 // Import your page components
 import SuitCatalog from './pages/SuitCatalog.js';
 import AddSuitPage from './pages/AddSuitPage.js';
+import EditSuitPage from './pages/EditSuitPage.js';
 import LoginPage from './pages/LoginPage.js';
-import SignupPage from './pages/SignupPage.js';
+import SignUpPage from './pages/SignUpPage.js';
 import AboutPage from './pages/AboutPage.js';
 import ContactPage from './pages/ContactPage.js';
 
 function App() {
-    const { user, loading } = useAuth();
+    const { user, loading, logout } = useAuth();
 
     const handleLogout = async () => {
         try {
-            await auth.signOut();
+            await logout();
         } catch (error) {
             console.error("Error logging out: ", error);
         }
@@ -53,8 +53,9 @@ function App() {
                     <Route path="/" element={<SuitCatalog />} />
                     <Route path="/catalog" element={<SuitCatalog />} />
                     <Route path="/add-suit" element={<AddSuitPage />} />
+                    <Route path="/edit-suit/:id" element={<EditSuitPage />} />
                     <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
+                    <Route path="/signup" element={<SignUpPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/contact" element={<ContactPage />} />
                 </Routes>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+// Import Realtime Database functions
+import { ref, set, serverTimestamp } from "firebase/database"; 
 import { auth, db, googleProvider } from '../firebase.js';
 
 const useAuth = () => {
@@ -17,19 +18,23 @@ const useAuth = () => {
 
   const updateUserProfile = async (user) => {
     if (!user) return;
-    const userRef = doc(db, 'users', user.uid);
-    await setDoc(userRef, {
+    // Use Realtime Database `ref` function
+    const userRef = ref(db, 'users/' + user.uid); 
+    // Use Realtime Database `set` function
+    await set(userRef, {
       displayName: user.displayName,
       email: user.email,
       photoURL: user.photoURL,
-      lastLogin: serverTimestamp(),
-    }, { merge: true });
+      // Use Realtime Database `serverTimestamp`
+      lastLogin: serverTimestamp(), 
+    });
   };
 
   const signInWithGoogle = async () => {
     setLoading(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
+      // The profile update will now work with Realtime Database
       await updateUserProfile(result.user);
     } catch (error) {
       console.error("Error durante el inicio de sesión con Google:", error);

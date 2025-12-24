@@ -18,6 +18,13 @@
     
     --color-surface-variant: 228 226 236;
     --color-on-surface-variant: 69 69 77;
+
+    /* Nuevos colores de superficie para contenedores */
+    --color-surface-container-lowest: 255 255 255;
+    --color-surface-container-low: 247 247 251;
+    --color-surface-container: 241 241 245;
+    --color-surface-container-high: 235 235 239;
+    --color-surface-container-highest: 229 229 233;
     
     --color-background: 248 248 252; /* Fondo ligeramente más oscuro */
     --color-on-background: 28 28 32;
@@ -30,5 +37,57 @@
     @apply bg-[rgb(var(--color-background))] text-[rgb(var(--color-on-background))] font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Fondo de Gradiente Animado para el Login */
+  .gradient-bg {
+    background: linear-gradient(-45deg, #1a237e, #283593, #0077c2, #0288d1, #4fc3f7);
+    background-size: 400% 400%;
+    animation: gradient-animation 15s ease infinite;
+  }
+
+  @keyframes gradient-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Animaciones de Entrada Escalonadas */
+  @keyframes fade-in-down {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in-down-1, .animate-fade-in-down-2, .animate-fade-in-down-3, .animate-fade-in-down-4 {
+    animation: fade-in-down 0.8s ease-out forwards;
+    opacity: 0;
+  }
+  .animate-fade-in-down-1 { animation-delay: 0.2s; }
+  .animate-fade-in-down-2 { animation-delay: 0.4s; }
+  .animate-fade-in-down-3 { animation-delay: 0.6s; }
+  .animate-fade-in-down-4 { animation-delay: 0.8s; }
+
+  /* Animación de entrada rápida (para filtros) */
+  @keyframes fade-in-down-fast {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in-down-fast {
+    animation: fade-in-down-fast 0.3s ease-out forwards;
+  }
+
+  /* Animación de Salto/Bote para iconos */
+  @keyframes bounce-on-hover {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  .animate-bounce-on-hover:hover {
+    animation: bounce-on-hover 0.6s ease-in-out;
   }
 }

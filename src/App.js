@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 
 // Firebase and Auth
 import { db } from './firebase.js';
@@ -9,17 +10,27 @@ import useAuth from './hooks/useAuth.js';
 // --- Main Components ---
 import Header from './components/Header.js';
 import Footer from './components/Footer.js';
-import BottomNavBar from './components/BottomNavBar.js';
 import LoginScreen from './components/LoginScreen.js';
+import FloatingActionButton from './components/FloatingActionButton.js';
 
 // --- Page/View Components ---
 import SearchPage from './components/SearchPage.js';
 import SuitDetailPage from './components/SuitDetailPage.js';
 import MessagesPage from './components/MessagesPage.js';
-import ProfilePage from './components/ProfilePage.js';
+import ProfileScreen from './components/ProfileScreen.js';
 import MyItemsPage from './components/MyItemsPage.js';
 import MyRentalsPage from './components/MyRentalsPage.js';
 import MyFavoritesPage from './components/MyFavoritesPage.js';
+import AddSuitPage from './components/AddSuitPage.js';
+import EditProfilePage from './components/EditProfilePage.js';
+import PublicProfilePage from './components/PublicProfilePage.js';
+
+// Wrapper component to correctly pass route params as props to SuitDetailPage
+const SuitDetailPageWrapper = (props) => {
+    const { suitId } = useParams();
+    const navigate = useNavigate();
+    return <SuitDetailPage suitId={suitId} {...props} onBack={() => navigate(-1)} />;
+};
 
 // Main App Component
 function App() {
@@ -27,19 +38,17 @@ function App() {
   const [favorites, setFavorites] = useState(new Set());
   const navigate = useNavigate();
 
-  // --- Firebase Listener (Favorites) ---
+  // --- Firebase Listener for Favorites ---
   useEffect(() => {
     if (!user) {
       setFavorites(new Set());
       return;
     }
-
     const favoritesRef = ref(db, `users/${user.uid}/favorites`);
     const unsubscribe = onValue(favoritesRef, (snapshot) => {
       const data = snapshot.val();
       setFavorites(new Set(data ? Object.keys(data) : []));
     });
-
     return () => unsubscribe();
   }, [user]);
 
@@ -55,8 +64,12 @@ function App() {
   };
 
   const handleSuitSelect = (suitId) => {
-    navigate(`/suit/${suitId}`);
-  }
+    if (suitId) {
+        navigate(`/suit/${suitId}`);
+    } else {
+        console.error("handleSuitSelect called with an invalid suitId:", suitId);
+    }
+  };
 
   // --- Render Logic ---
   if (loading) {
@@ -71,7 +84,7 @@ function App() {
     return <LoginScreen />;
   }
 
-  const commonSearchPageProps = {
+  const suitListProps = {
       onSuitSelect: handleSuitSelect,
       favorites: favorites,
       onToggleFavorite: handleToggleFavorite,
@@ -79,23 +92,33 @@ function App() {
 
   return (
     <div className="bg-background min-h-screen flex flex-col">
-      <Header />
+      <Header favoritesCount={favorites.size} />
       
-      <main className="flex-grow container mx-auto p-4 pt-24 md:pt-28 pb-20">
+      <main className="flex-grow container mx-auto p-4 pt-24 md:pt-28">
         <Routes>
-          <Route path="/" element={<SearchPage {...commonSearchPageProps} />} />
-          <Route path="/search" element={<SearchPage {...commonSearchPageProps} />} />
-          <Route path="/suit/:suitId" element={<SuitDetailPage favorites={favorites} onToggleFavorite={handleToggleFavorite} />} />
+          <Route path="/" element={<SearchPage {...suitListProps} />} />
+          <Route path="/search" element={<SearchPage {...suitListProps} />} />
+          <Route 
+            path="/suit/:suitId" 
+            element={<SuitDetailPageWrapper favorites={favorites} onToggleFavorite={handleToggleFavorite} />} 
+          />
+          <Route path="/add-suit" element={<AddSuitPage />} />
           <Route path="/messages" element={<MessagesPage />} />
+          <Route path="/messages/:chatId" element={<MessagesPage />} />
           <Route path="/my-items" element={<MyItemsPage />} />
           <Route path="/my-rentals" element={<MyRentalsPage />} />
-          <Route path="/favorites" element={<MyFavoritesPage {...commonSearchPageProps} />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/favorites" element={<MyFavoritesPage {...suitListProps} />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/user/:userId" element={<PublicProfilePage />} />
+          <Route path="/edit-profile" element={<EditProfilePage />} />
         </Routes>
       </main>
       
+      <div className="fixed bottom-16 right-16 z-40">
+        <FloatingActionButton />
+      </div>
+      
       <Footer />
-      <BottomNavBar />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { db } from '../firebase.js';
+import { db } from '../firebase.js'; // Corrected import
 import { ref, remove, update } from 'firebase/database';
 import useAuth from '../hooks/useAuth.js';
 import useRealtimeDB from '../hooks/useRealtimeDB.js';

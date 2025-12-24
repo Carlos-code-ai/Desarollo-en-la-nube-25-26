@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { ref, onValue } from "firebase/database";
-import { db } from '../firebase.js'; // db es ahora la instancia de Realtime Database
+import { db } from '../firebase.js'; // Corrected import
 
 /**
  * Hook de React para obtener datos de una ruta de Realtime Database.
@@ -14,41 +13,29 @@ const useRealtimeDB = (path) => {
 
   useEffect(() => {
     const dbRef = ref(db, path);
-
-    // onValue escucha los cambios en la ruta especificada
+    
     const unsubscribe = onValue(dbRef, (snapshot) => {
       try {
-        setLoading(true);
-        const data = snapshot.val();
-        if (data) {
-          // Convertimos el objeto de objetos en un array de objetos
-          const documents = Object.keys(data).map(key => ({
-            id: key,
-            ...data[key]
-          }));
-          setDocs(documents);
+        const val = snapshot.val();
+        if (val) {
+          const dataArray = Object.keys(val).map(key => ({ ...val[key], id: key }));
+          setDocs(dataArray);
         } else {
-          setDocs([]); // No hay datos en esa ruta
+          setDocs([]);
         }
-        setError(null);
       } catch (err) {
-        console.error(err);
-        setError("Error al procesar los datos. Por favor, inténtelo de nuevo más tarde.");
-      } finally {
-        setLoading(false);
+        setError(err);
+        console.error("Error processing data: ", err);
       }
+      setLoading(false);
     }, (err) => {
-        // Manejo de errores de la propia subscripción (ej. permisos denegados)
-        console.error(err);
-        setError("Error al acceder a los datos. Verifique su conexión y los permisos de la base de datos.");
-        setLoading(false);
+      setError(err);
+      setLoading(false);
+      console.error("Error fetching data: ", err);
     });
 
-    // La función de limpieza que devuelve useEffect se encarga de cancelar la subscripción
-    // cuando el componente se desmonta.
     return () => unsubscribe();
-
-  }, [path]); // El efecto se ejecuta cada vez que la ruta cambia
+  }, [path]);
 
   return { docs, loading, error };
 };

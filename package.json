@@ -2,19 +2,19 @@
   "name": "ready2wear",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "dependencies": {
-    "@craco/craco": "^5.9.0",
+    "@craco/craco": "^7.1.0",
     "@gsap/react": "^2.1.2",
-    "@mui/icons-material": "^7.3.6",
+    "@popperjs/core": "^2.11.8",
+    "date-fns": "^4.1.0",
     "firebase": "^12.7.0",
-    "firebase-admin": "^13.6.0",
     "gsap": "^3.14.2",
-    "react": "^18.2.0",
+    "react": "^19.2.1",
     "react-day-picker": "^9.13.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^7.11.0",
-    "react-scripts": "^0.0.0"
+    "react-dom": "^19.2.1",
+    "react-popper": "^2.3.0",
+    "react-router-dom": "^6.25.1",
+    "react-scripts": "5.0.1"
   },
   "scripts": {
     "start": "craco start",
@@ -42,7 +42,10 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.23",
-    "postcss": "^8.5.6",
+    "postcss": "8.4.31",
     "tailwindcss": "^3.4.19"
+  },
+  "overrides": {
+    "nth-check": "2.0.1"
   }
 }

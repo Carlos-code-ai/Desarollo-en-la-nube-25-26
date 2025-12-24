@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import { collection, getDocs, addDoc, Timestamp, serverTimestamp } from 'firebase/firestore';
+// Import Realtime Database functions and correct db import
+import { ref, onValue, push, serverTimestamp } from 'firebase/database';
 import { db } from '../firebase.js';
 import { format } from 'date-fns';
 import useAuth from '../hooks/useAuth.js';
@@ -15,56 +16,58 @@ const BookingCalendar = ({ suitId }) => {
   const [bookedDates, setBookedDates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
-  const bookingButtonRef = useRef(null); // Ref para el botón
+  const bookingButtonRef = useRef(null); 
 
-  // Animación de éxito del botón
   useGSAP(() => {
-    // Definimos la animación pero no la ejecutamos aún
     const timeline = gsap.timeline({ paused: true, defaults: { duration: 0.3 } })
       .to(bookingButtonRef.current, { backgroundColor: '#16a34a', ease: 'power2.in' })
       .to(bookingButtonRef.current, { textContent: '¡Reservado!', duration: 0, delay: -0.1 })
       .to(bookingButtonRef.current, { scale: 1.05, yoyo: true, repeat: 1, ease: 'power2.out' })
       .to(bookingButtonRef.current, { backgroundColor: '#2563eb', textContent: 'Confirmar Reserva', delay: 1.5, ease: 'power2.inOut' }, '>');
-      
-      // Guardamos la animación en el elemento para poder acceder a ella más tarde
       gsap.data(bookingButtonRef.current, "timeline", timeline);
-
   }, { scope: bookingButtonRef });
 
   const playSuccessAnimation = () => {
-    // Accedemos a la animación guardada y la reproducimos
     const timeline = gsap.data(bookingButtonRef.current, "timeline");
     if (timeline) timeline.play(0);
   }
 
-  useEffect(() => { 
-    const fetchBookings = async () => {
+  useEffect(() => {
+    const fetchBookings = () => {
         if (!suitId) return;
         try {
             setLoading(true);
-            const bookingsColRef = collection(db, `suits/${suitId}/reservations`);
-            const querySnapshot = await getDocs(bookingsColRef);
-            const dates = [];
-            querySnapshot.forEach(doc => {
-                const { startDate, endDate } = doc.data();
-                if (startDate && endDate) {
-                    let currentDate = startDate.toDate();
-                    const finalDate = endDate.toDate();
-                    while (currentDate <= finalDate) {
-                        dates.push(new Date(currentDate));
-                        currentDate.setDate(currentDate.getDate() + 1);
-                    }
+            // Use Realtime Database ref and onValue
+            const bookingsRef = ref(db, `suits/${suitId}/reservations`);
+            const unsubscribe = onValue(bookingsRef, (snapshot) => {
+                const dates = [];
+                const bookings = snapshot.val();
+                if (bookings) {
+                    Object.values(bookings).forEach(booking => {
+                        const { startDate, endDate } = booking;
+                        if (startDate && endDate) {
+                            let currentDate = new Date(startDate);
+                            const finalDate = new Date(endDate);
+                            while (currentDate <= finalDate) {
+                                dates.push(new Date(currentDate));
+                                currentDate.setDate(currentDate.getDate() + 1);
+                            }
+                        }
+                    });
                 }
+                setBookedDates(dates);
+                setLoading(false);
             });
-            setBookedDates(dates);
+            return () => unsubscribe();
         } catch (error) {
             console.error("Error fetching bookings: ", error);
-        } finally {
             setLoading(false);
         }
     };
+    
+    const unsubscribe = fetchBookings();
+    return () => unsubscribe && unsubscribe();
 
-    fetchBookings();
   }, [suitId]);
 
   const handleBooking = async () => {
@@ -73,25 +76,18 @@ const BookingCalendar = ({ suitId }) => {
 
     setIsBooking(true);
     try {
-      const bookingsColRef = collection(db, `suits/${suitId}/reservations`);
-      await addDoc(bookingsColRef, {
+      // Use Realtime Database ref and push
+      const bookingsRef = ref(db, `suits/${suitId}/reservations`);
+      await push(bookingsRef, {
         userId: user.uid,
         userEmail: user.email,
-        startDate: Timestamp.fromDate(dateRange.from),
-        endDate: Timestamp.fromDate(dateRange.to),
+        // Store dates as ISO strings for consistency
+        startDate: dateRange.from.toISOString(),
+        endDate: dateRange.to.toISOString(),
         createdAt: serverTimestamp()
       });
-
-      const newBookedDates = [];
-      let currentDate = new Date(dateRange.from);
-      const finalDate = new Date(dateRange.to);
-      while (currentDate <= finalDate) {
-        newBookedDates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-      setBookedDates(prevDates => [...prevDates, ...newBookedDates]);
-      setDateRange(undefined);
       
+      setDateRange(undefined);
       playSuccessAnimation();
 
     } catch (error) {
@@ -135,4 +131,4 @@ const BookingCalendar = ({ suitId }) => {
   );
 };
 
-export default BookingCalendar; 
+export default BookingCalendar;

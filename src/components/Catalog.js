@@ -1,59 +1,89 @@
-import React from 'react';
+
+import React, { useState, useMemo } from 'react';
 import useRealtimeDB from '../hooks/useRealtimeDB.js';
 import useSuitAnimations from '../hooks/useSuitAnimations.js';
 import SuitCard, { SuitCardSkeleton } from './SuitCard.js';
 
+const SortDropdown = ({ sortOption, setSortOption }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const options = {
+        newest: 'Novedades',
+        priceAsc: 'Precio: Menor a Mayor',
+        priceDesc: 'Precio: Mayor a Menor',
+    };
+
+    return (
+        <div className="relative inline-block text-left">
+            <div>
+                <button
+                    type="button"
+                    className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-surface-container px-4 py-2.5 text-sm font-semibold text-on-surface shadow-sm ring-1 ring-inset ring-outline hover:bg-surface-container-high transition-all duration-200"
+                    onClick={() => setIsOpen(!isOpen)}
+                >
+                    {options[sortOption]}
+                    <span className="material-icons -mr-1 h-5 w-5 text-on-surface-variant" aria-hidden="true">expand_more</span>
+                </button>
+            </div>
+
+            {isOpen && (
+                <div
+                    className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-surface-container-low shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in-down-fast"
+                    role="menu"
+                    aria-orientation="vertical"
+                >
+                    <div className="py-1">
+                        {Object.keys(options).map((key) => (
+                            <button
+                                key={key}
+                                onClick={() => { setSortOption(key); setIsOpen(false); }}
+                                className={`${(key === sortOption) ? 'bg-primary/20 text-primary' : 'text-on-surface-variant'} group flex items-center w-full px-4 py-2 text-sm text-left hover:bg-primary/10 hover:text-primary transition-colors`}
+                                role="menuitem"
+                            >
+                                {options[key]}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 const Catalog = ({ onSuitSelect }) => {
   const { docs: suits, loading, error } = useRealtimeDB('trajes');
-
-  // El hook de animación ahora también nos devuelve la referencia para el contenedor
   const { containerRef } = useSuitAnimations();
+  const [sortOption, setSortOption] = useState('newest');
 
-  // --- Render Logic ---
+  const sortedSuits = useMemo(() => {
+    let sorted = [...suits];
+    switch (sortOption) {
+      case 'priceAsc':
+        sorted.sort((a, b) => a.price - b.price);
+        break;
+      case 'priceDesc':
+        sorted.sort((a, b) => b.price - a.price);
+        break;
+      case 'newest':
+      default:
+        sorted.sort((a, b) => b.createdAt - a.createdAt);
+        break;
+    }
+    return sorted;
+  }, [suits, sortOption]);
 
   const renderContent = () => {
-    // 1. Estado de Error
-    if (error) {
-      return (
-        <div className="text-center text-error bg-error/10 p-6 rounded-2xl">
-          <p className="font-bold mb-2">¡Ups! Algo salió mal.</p>
-          <p className="text-sm">No pudimos cargar el catálogo. Por favor, intenta de nuevo más tarde.</p>
-        </div>
-      );
-    }
-
-    // 2. Estado de Carga (Skeletons)
-    if (loading) {
-      return (
+    if (error) return <p>Error al cargar.</p>;
+    if (loading) return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[...Array(6)].map((_, index) => <SuitCardSkeleton key={index} />)}
+            {[...Array(6)].map((_, index) => <SuitCardSkeleton key={index} />)}
         </div>
-      );
-    }
+    );
+    if (suits.length === 0) return <p>No hay trajes disponibles.</p>;
     
-    // 3. Estado Vacío
-    if (suits.length === 0) {
-      return (
-        <div className="text-center py-16 px-6 bg-surface rounded-3xl border border-dashed border-outline">
-            <h3 className="text-xl font-semibold text-on-surface">El catálogo está vacío</h3>
-            <p className="text-on-surface-variant mt-2 mb-6">¡Sé el primero en añadir un nuevo traje a nuestra colección!</p>
-            {/* Aquí podríamos agregar un botón para añadir un traje en el futuro */}
-            <button className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-on-primary shadow-sm hover:scale-105 transition-transform duration-200">
-                Añadir Traje
-            </button>
-        </div>
-      );
-    }
-    
-    // 4. Contenido Principal (Grid de Trajes)
     return (
       <div ref={containerRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {suits.map(suit => (
-          <SuitCard 
-            key={suit.id}
-            suit={suit}
-            onSelect={onSuitSelect} // Pasamos la función directamente
-          />
+        {sortedSuits.map(suit => (
+          <SuitCard key={suit.id} suit={suit} onSelect={onSuitSelect} />
         ))}
       </div>
     );
@@ -62,9 +92,12 @@ const Catalog = ({ onSuitSelect }) => {
   return (
     <section className="py-12 sm:py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="text-center text-4xl font-bold tracking-tight text-on-surface sm:text-5xl mb-12">
-          Nuestro Catálogo
-        </h2>
+        <div className="flex justify-between items-center mb-12">
+            <h2 className="text-4xl font-bold tracking-tight text-on-surface sm:text-5xl">
+            Catálogo
+            </h2>
+            <SortDropdown sortOption={sortOption} setSortOption={setSortOption} />
+        </div>
         {renderContent()}
       </div>
     </section>

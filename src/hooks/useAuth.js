@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut, updateProfile } from "firebase/auth";
 import { ref as dbRef, set, update, serverTimestamp, onValue, remove } from "firebase/database";
@@ -9,24 +10,28 @@ const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState(new Set());
 
+  // This effect runs once on mount to set up the auth state listener.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      // We create a new object to ensure that components depending on the user state will re-render.
+      setUser(currentUser ? { ...currentUser } : null);
       if (!currentUser) {
           setFavorites(new Set());
-          setLoading(false);
       }
+      // We only stop loading on the initial auth state check.
+      if (loading) setLoading(false);
     });
     return () => unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // This effect manages fetching user-specific data like favorites.
   useEffect(() => {
     if (!user) {
         setLoading(false);
         return;
     }
 
-    setLoading(true);
     const favoritesRef = dbRef(db, `users/${user.uid}/favorites`);
     
     const unsubscribeFavorites = onValue(favoritesRef, (snapshot) => {
@@ -41,6 +46,20 @@ const useAuth = () => {
     return () => unsubscribeFavorites();
   }, [user]);
 
+  // Function to force a refresh of the user's profile data.
+  const forceRefreshUser = async () => {
+    if (auth.currentUser) {
+      try {
+        await auth.currentUser.reload();
+        const refreshedUser = auth.currentUser;
+        // Create a new object to ensure React recognizes the state change.
+        setUser({ ...refreshedUser });
+      } catch (error) {
+        console.error("Error reloading user data:", error);
+      }
+    }
+  };
+
   const updateUserProfileInDB = async (userData) => {
     if (!userData) return;
     const userRef = dbRef(db, 'users/' + userData.uid);
@@ -50,31 +69,6 @@ const useAuth = () => {
         photoURL: userData.photoURL,
         lastLogin: serverTimestamp(),
     });
-  };
-
-  const updateUserProfileAndPhoto = async (newName, imageFile) => {
-    if (!auth.currentUser) return;
-    setLoading(true);
-    try {
-      let photoURL = auth.currentUser.photoURL;
-
-      if (imageFile) {
-        const imageRef = storageRef(getStorage(), `profile-images/${auth.currentUser.uid}`);
-        await uploadBytes(imageRef, imageFile);
-        photoURL = await getDownloadURL(imageRef);
-      }
-
-      await updateProfile(auth.currentUser, { displayName: newName, photoURL: photoURL });
-
-      await updateUserProfileInDB({ ...auth.currentUser, displayName: newName, photoURL });
-
-      setUser(prevUser => ({ ...prevUser, displayName: newName, photoURL }));
-
-    } catch (error) {
-      console.error("Error updating profile:", error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const toggleFavorite = async (suitId) => {
@@ -99,7 +93,8 @@ const useAuth = () => {
         }, { onlyOnce: true });
     } catch (error) {
         console.error("Error during Google sign-in:", error);
-        setLoading(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,6 +106,31 @@ const useAuth = () => {
     }
   };
 
+  // Note: updateUserProfileAndPhoto is kept for other potential uses but is not used by the new ProfileScreen
+  const updateUserProfileAndPhoto = async (newName, imageFile) => {
+    if (!auth.currentUser) return;
+    setLoading(true);
+    try {
+      let photoURL = auth.currentUser.photoURL;
+
+      if (imageFile) {
+        const imageRef = storageRef(getStorage(), `profile-images/${auth.currentUser.uid}`);
+        await uploadBytes(imageRef, imageFile);
+        photoURL = await getDownloadURL(imageRef);
+      }
+
+      await updateProfile(auth.currentUser, { displayName: newName, photoURL: photoURL });
+      await updateUserProfileInDB({ ...auth.currentUser, displayName: newName, photoURL });
+      // The onAuthStateChanged listener will now pick up the changes automatically.
+      forceRefreshUser();
+
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
       user,
       loading,
@@ -118,6 +138,7 @@ const useAuth = () => {
       toggleFavorite,
       signInWithGoogle,
       logout,
+      forceRefreshUser, // Export the new function
       updateUserProfileAndPhoto
   };
 };

@@ -1,20 +1,23 @@
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
-import useAuth from '../hooks/useAuth';
 
+// --- HeartIcon Component (for favoriting) ---
 const HeartIcon = ({ isFavorite, onToggle }) => {
     const iconRef = useRef(null);
     const pathRef = useRef(null);
     const isFirstRun = useRef(true);
 
     useEffect(() => {
+        // Set initial state without animation
         if (isFirstRun.current) {
             gsap.set(pathRef.current, { fill: isFavorite ? '#EF4444' : 'none', stroke: isFavorite ? '#dc2626' : 'white' });
             isFirstRun.current = false;
             return;
         }
+
+        // Animate on subsequent changes
         const tl = gsap.timeline();
         if (isFavorite) {
             tl.to(iconRef.current, { scale: 1.2, ease: 'power1.in', duration: 0.1 })
@@ -27,6 +30,7 @@ const HeartIcon = ({ isFavorite, onToggle }) => {
         }
     }, [isFavorite]);
 
+    // Stop propagation to prevent card click when favoriting
     const handleToggle = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -44,93 +48,60 @@ const HeartIcon = ({ isFavorite, onToggle }) => {
     );
 };
 
+
+// --- SuitCard Component ---
 const SuitCard = ({ suit, isFavorite, onToggleFavorite }) => {
-    const { id, name, price, size, imageUrl, description, availability } = suit;
+    const { id, name, price, size, imageUrl, availability } = suit;
     const isRented = availability && availability.includes('rented');
-    
-    const [isPinned, setIsPinned] = useState(false);
     const cardRef = useRef(null);
-    const detailsRef = useRef(null);
-    const animation = useRef(null);
 
-    useEffect(() => {
-        gsap.set(detailsRef.current, { height: 'auto', autoAlpha: 1 });
-        animation.current = gsap.from(detailsRef.current, {
-            height: 0,
-            autoAlpha: 0,
-            duration: 0.5,
-            ease: 'expo.inOut',
-            paused: true
-        });
-    }, []);
-
+    // GSAP animation for hover effect
     const handleMouseEnter = () => {
-        animation.current.play();
-        gsap.to(cardRef.current, { y: -8, duration: 0.3, ease: 'power2.out' });
+        gsap.to(cardRef.current, { y: -8, scale: 1.03, duration: 0.3, ease: 'power2.out' });
     };
 
     const handleMouseLeave = () => {
-        if (!isPinned) {
-            animation.current.reverse();
-        }
-        gsap.to(cardRef.current, { y: 0, duration: 0.2, ease: 'power2.in' });
-    };
-
-    const handleClick = (e) => {
-        if (e.target.closest('a, button')) return;
-        setIsPinned(prev => !prev);
+        gsap.to(cardRef.current, { y: 0, scale: 1, duration: 0.2, ease: 'power2.in' });
     };
 
     return (
-        <div
-            ref={cardRef}
+        <Link 
+            to={`/suit/${id}`}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            onClick={handleClick}
-            className="relative flex flex-col rounded-2xl overflow-hidden shadow-lg bg-surface-container-high cursor-pointer"
+            className="block w-full rounded-2xl overflow-hidden shadow-lg bg-surface-container-high transition-transform duration-300 ease-in-out"
             style={{ willChange: 'transform' }}
         >
-            <div className="relative h-96 w-full overflow-hidden">
-                <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                {isRented && <div className="absolute top-3 left-3 bg-error text-on-error px-2.5 py-1 text-xs font-bold rounded-full z-10">ALQUILADO</div>}
-                <HeartIcon isFavorite={isFavorite} onToggle={() => onToggleFavorite(id)} />
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                     <div className="flex justify-between items-end">
-                        <div>
-                            <h3 className="text-lg font-bold leading-tight">{name}</h3>
-                            <p className="text-sm text-white/80">Talla: {size}</p>
+            <div ref={cardRef} className="relative flex flex-col h-full">
+                {/* Image Container with new aspect ratio */}
+                <div className="relative w-full aspect-[3/4] overflow-hidden">
+                    <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                    {isRented && <div className="absolute top-3 left-3 bg-error text-on-error px-2.5 py-1 text-xs font-bold rounded-full z-10">ALQUILADO</div>}
+                    <HeartIcon isFavorite={isFavorite} onToggle={() => onToggleFavorite(id)} />
+                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <h3 className="text-lg font-bold leading-tight">{name}</h3>
+                                <p className="text-sm text-white/80">Talla: {size}</p>
+                            </div>
+                            <p className="text-xl font-bold text-white">{price}€<span className="text-sm font-normal text-white/80">/día</span></p>
                         </div>
-                        <p className="text-xl font-bold text-white">{price}€<span className="text-sm font-normal text-white/80">/día</span></p>
                     </div>
                 </div>
             </div>
-            
-            <div ref={detailsRef} className="overflow-hidden">
-                <div className="p-4 pt-3 border-t border-outline/20">
-                    <p className="text-sm text-on-surface-variant mb-4 leading-relaxed">{description || "Este traje no tiene una descripción detallada."}</p>
-                    <Link 
-                        to={`/suit/${id}`} 
-                        onClick={(e) => e.stopPropagation()}
-                        className="block text-center w-full px-4 py-2.5 bg-primary text-on-primary font-bold rounded-full hover:bg-primary/80 transition-colors duration-200"
-                    >
-                        Ver y Alquilar
-                    </Link>
-                </div>
-            </div>
-        </div>
+        </Link>
     );
 };
 
+// --- Skeleton Loader for SuitCard ---
 export const SuitCardSkeleton = () => (
     <div className="relative rounded-2xl overflow-hidden shadow-lg bg-surface-container-high">
-        <div className="relative h-96 w-full overflow-hidden bg-surface-container-highest animate-pulse"></div>
-        <div className="p-4 flex justify-between items-end">
-            <div>
-                <div className="h-5 bg-surface-container-highest rounded w-3/4 mb-2 animate-pulse"></div>
-                <div className="h-4 bg-surface-container-highest rounded w-1/2 animate-pulse"></div>
-            </div>
-            <div className="h-7 bg-surface-container-highest rounded w-1/4 animate-pulse"></div>
+        {/* Adjusted height to match the new image aspect ratio */}
+        <div className="relative w-full aspect-[3/4] overflow-hidden bg-surface-container-highest animate-pulse"></div>
+        <div className="p-4">
+            <div className="h-5 bg-surface-container-highest rounded w-3/4 mb-2 animate-pulse"></div>
+            <div className="h-4 bg-surface-container-highest rounded w-1/2 animate-pulse"></div>
         </div>
     </div>
 );

@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import useRealtimeDB from '../hooks/useRealtimeDB.js';
 import useSuitAnimations from '../hooks/useSuitAnimations.js';
 import SuitCard, { SuitCardSkeleton } from './SuitCard.js';
 import { gsap } from 'gsap';
 import { usePopper } from 'react-popper';
 import FilterPanel from './FilterPanel.js';
+import SearchBar from './SearchBar.js'; // Importar SearchBar
 
+// --- Iconos ---
 const SortIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" /></svg>;
-const CheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clipRule="evenodd" /></svg>;
+const CheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 flex-shrink-0"><path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.052-.143z" clipRule="evenodd" /></svg>;
 const AnimatedFilterIcon = () => {
     const iconRef = useRef(null);
     useEffect(() => {
@@ -29,6 +31,7 @@ const AnimatedFilterIcon = () => {
     );
 };
 
+// --- Dropdown de Ordenación ---
 const SortDropdown = ({ selected, onSelect }) => {
     const options = { 'default': 'Relevancia', 'price-asc': 'Precio: Menor a Mayor', 'price-desc': 'Precio: Mayor a Menor' };
     const [isOpen, setIsOpen] = useState(false);
@@ -45,20 +48,32 @@ const SortDropdown = ({ selected, onSelect }) => {
     }, [isOpen]);
     return (
         <div className="relative" ref={dropdownRef}>
-            <button onClick={() => setIsOpen(true)} className="flex items-center justify-between w-full h-10 px-4 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary">
-                <span>{options[selected]}</span><SortIcon className={`h-5 w-5 text-on-surface-variant transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+            <button onClick={() => setIsOpen(true)} className="flex items-center justify-between w-full h-10 px-4 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary overflow-hidden">
+                <span className="truncate pr-2">{options[selected]}</span>
+                <SortIcon className={`h-5 w-5 flex-shrink-0 text-on-surface-variant transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             <div ref={popperRef} style={styles.popper} {...attributes.popper} className="z-10 w-64 bg-surface-container-high rounded-xl shadow-lg border border-outline/30 overflow-hidden">
-                {Object.entries(options).map(([key, value]) => (<button key={key} onClick={() => { onSelect(key); setIsOpen(false); }} className="flex items-center justify-between w-full text-left px-4 py-2.5 text-sm font-medium text-on-surface-variant hover:bg-primary/10 hover:text-on-surface transition-colors Dduration-150"><span>{value}</span>{selected === key && <CheckIcon/>}</button>))}
+                 {Object.entries(options).map(([key, value]) => (
+                    <button 
+                        key={key} 
+                        onClick={() => { onSelect(key); setIsOpen(false); }} 
+                        className="flex items-center justify-between w-full text-left px-4 py-2.5 text-sm font-medium text-on-surface-variant hover:bg-primary/10 hover:text-on-surface transition-colors duration-150"
+                    >
+                        <span className="truncate pr-2">{value}</span>
+                        {selected === key && <CheckIcon/>}
+                    </button>
+                ))}
             </div>
         </div>
     );
 }
 
+// --- Página de Búsqueda ---
 const SearchPage = ({ favorites, onToggleFavorite }) => {
   const { docs: allSuits, loading, error } = useRealtimeDB('trajes');
   const { containerRef } = useSuitAnimations();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const normalizedSuits = useMemo(() => allSuits.map(s => ({ ...s, price: s.price || s.precioPorDia, name: s.name || s.nombre, eventType: s.eventType ? s.eventType.charAt(0).toUpperCase() + s.eventType.slice(1) : 'No especificado', condition: s.condition ? s.condition.charAt(0).toUpperCase() + s.condition.slice(1) : 'No especificado' })), [allSuits]);
 
@@ -84,13 +99,24 @@ const SearchPage = ({ favorites, onToggleFavorite }) => {
   }, [normalizedSuits]);
 
   useEffect(() => { setPriceFilter(maxPrice); }, [maxPrice]);
-  useEffect(() => { setSearchTerm(new URLSearchParams(location.search).get('q') || ''); }, [location.search]);
+  
+  // Efecto para sincronizar el término de búsqueda desde la URL
+  useEffect(() => { 
+    const queryFromUrl = new URLSearchParams(location.search).get('search') || '';
+    setSearchTerm(queryFromUrl);
+  }, [location.search]);
 
   const processedSuits = useMemo(() => {
     let suits = [...normalizedSuits];
     if (searchTerm) {
         const lowerTerm = searchTerm.toLowerCase();
-        suits = suits.filter(s => Object.values(s).some(val => String(val).toLowerCase().includes(lowerTerm)));
+        suits = suits.filter(s => 
+            (s.name && s.name.toLowerCase().includes(lowerTerm)) ||
+            (s.marca && s.marca.toLowerCase().includes(lowerTerm)) ||
+            (s.color && s.color.toLowerCase().includes(lowerTerm)) ||
+            (s.eventType && s.eventType.toLowerCase().includes(lowerTerm)) ||
+            (s.material && s.material.toLowerCase().includes(lowerTerm))
+        );
     }
     suits = suits.filter(s => {
         const sizeMatch = filters.size.length === 0 || filters.size.includes(s.size);
@@ -113,6 +139,13 @@ const SearchPage = ({ favorites, onToggleFavorite }) => {
       setPriceFilter(maxPrice);
   }
 
+  // El manejador para SearchBar, que actualiza el término de búsqueda
+  const handleSearch = (query) => {
+      setSearchTerm(query);
+      // Opcional: navegar a la URL con el parámetro de búsqueda si no lo hace SearchBar
+      // navigate(`/?search=${encodeURIComponent(query)}`);
+  }
+
   const activeFilterCount = Object.values(filters).flat().length + (priceFilter < maxPrice ? 1 : 0);
 
   const renderResults = () => {
@@ -128,6 +161,8 @@ const SearchPage = ({ favorites, onToggleFavorite }) => {
       <div className="w-full max-w-7xl mx-auto flex flex-col space-y-8 px-4 sm:px-6 lg:px-8 py-8">
           <header className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex-grow w-full">
+                  {/* --- Barra de Búsqueda Integrada --- */}
+                  <SearchBar allSuits={normalizedSuits} onSearch={handleSearch} />
               </div>
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button onClick={() => setIsFilterPanelOpen(true)} className="relative flex-grow sm:flex-grow-0 flex items-center justify-center space-x-2 h-10 px-4 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm">

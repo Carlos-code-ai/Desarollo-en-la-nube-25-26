@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { db } from '../firebase.js';
 import { ref, onValue, push, query, orderByChild, equalTo, get, serverTimestamp, update } from 'firebase/database';
@@ -6,20 +6,49 @@ import useAuth from '../hooks/useAuth.js';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { es } from 'date-fns/locale';
+import { gsap } from 'gsap';
 
 const HeartIcon = ({ isFavorite, onToggle }) => {
+    const iconRef = useRef(null);
+    const pathRef = useRef(null);
+    const isFirstRun = useRef(true);
+
+    useEffect(() => {
+        // Set initial state without animation
+        if (isFirstRun.current) {
+            gsap.set(pathRef.current, { fill: isFavorite ? '#EF4444' : 'none', stroke: isFavorite ? '#dc2626' : 'white' });
+            isFirstRun.current = false;
+            return;
+        }
+
+        // Animate on subsequent changes
+        const tl = gsap.timeline();
+        if (isFavorite) {
+            tl.to(iconRef.current, { scale: 1.2, ease: 'power1.in', duration: 0.1 })
+              .set(pathRef.current, { fill: '#EF4444', stroke: '#dc2626' })
+              .to(iconRef.current, { scale: 1, ease: 'elastic.out(1, 0.4)', duration: 0.4 });
+        } else {
+            tl.to(iconRef.current, { scale: 0.8, ease: 'power1.in', duration: 0.1 })
+              .set(pathRef.current, { fill: 'none', stroke: 'white' })
+              .to(iconRef.current, { scale: 1, ease: 'power1.out', duration: 0.1 });
+        }
+    }, [isFavorite]);
+
+    // Stop propagation to prevent card click when favoriting
+    const handleToggle = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onToggle();
+    };
+
     return (
-        <div 
-            className="absolute top-4 right-4 z-10 h-10 w-10 grid place-items-center bg-background/70 backdrop-blur-sm rounded-full cursor-pointer transition-colors"
-            onClick={(e) => {
-                e.stopPropagation();
-                onToggle();
-            }}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} className={`w-6 h-6 transition-all duration-300 ${isFavorite ? 'fill-red-500 stroke-red-600' : 'fill-none stroke-on-surface'}`}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-            </svg>
-        </div>
+        <button onClick={handleToggle} className="absolute top-4 right-4 h-10 w-10 grid place-items-center bg-black/50 backdrop-blur-sm rounded-full cursor-pointer z-20 focus:outline-none">
+            <div ref={iconRef}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} className={'w-6 h-6'}>
+                    <path ref={pathRef} strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+            </div>
+        </button>
     );
 };
 

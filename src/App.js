@@ -1,17 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 
 // Firebase and Auth
-import { db } from './firebase.js';
-import { ref, onValue } from 'firebase/database';
 import useAuth from './hooks/useAuth.js';
 
 // --- Main Components ---
 import Header from './components/Header.js';
-import Footer from './components/Footer.js';
 import LoginScreen from './components/LoginScreen.js';
 import FloatingActionButton from './components/FloatingActionButton.js';
+import Footer from './components/Footer.js';
 
 // --- Page/View Components ---
 import SearchPage from './components/SearchPage.js';
@@ -22,7 +20,6 @@ import MyItemsPage from './components/MyItemsPage.js';
 import MyRentalsPage from './components/MyRentalsPage.js';
 import MyFavoritesPage from './components/MyFavoritesPage.js';
 import AddSuitPage from './components/AddSuitPage.js';
-import EditProfilePage from './components/EditProfilePage.js';
 import PublicProfilePage from './components/PublicProfilePage.js';
 
 // Wrapper component to correctly pass route params as props
@@ -83,14 +80,10 @@ function App() {
           <Route path="/favorites" element={<MyFavoritesPage {...suitListProps} />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/user/:userId" element={<PublicProfilePage />} />
-          <Route path="/edit-profile" element={<EditProfilePage />} />
         </Routes>
       </main>
       
-      <div className="fixed bottom-16 right-16 z-40">
-        <FloatingActionButton />
-      </div>
-      
+      <FloatingActionButton />
       <Footer />
     </div>
   );

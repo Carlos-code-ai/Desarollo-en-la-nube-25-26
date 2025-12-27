@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth.js';
-import useUnreadCount from '../hooks/useUnreadCount.js'; // Importar el nuevo hook
+import useUnreadCount from '../hooks/useUnreadCount.js';
 import { gsap } from 'gsap';
 
 const AnimatedSearchIcon = () => {
@@ -65,6 +65,18 @@ const NavIcon = ({ to, iconName, ariaLabel, badgeCount }) => {
 const ProfileAvatar = ({ user }) => {
     const avatarRef = useRef(null);
 
+    const getInitials = (name) => {
+        if (!name) return '?';
+        const initials = name
+            .split(' ')
+            .map(n => n[0])
+            .filter(Boolean)
+            .slice(0, 2)
+            .join('')
+            .toUpperCase();
+        return initials || '?';
+    };
+
     const handleMouseEnter = () => {
         gsap.to(avatarRef.current, { scale: 1.15, duration: 0.3, ease: 'back.out(1.7)' });
     };
@@ -75,15 +87,25 @@ const ProfileAvatar = ({ user }) => {
 
     return (
         <Link to="/profile" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-            <img
+            <div
                 ref={avatarRef}
-                className="h-9 w-9 rounded-full object-cover border-2 border-transparent hover:border-primary transition-all"
-                src={user.photoURL}
-                alt="Ver perfil"
-            />
+                className="h-9 w-9 rounded-full border-2 border-transparent hover:border-primary transition-all"
+            >
+                {user.photoURL ? (
+                    <img
+                        className="h-full w-full rounded-full object-cover"
+                        src={user.photoURL}
+                        alt="Ver perfil"
+                    />
+                ) : (
+                    <div className="h-full w-full rounded-full flex items-center justify-center bg-primary text-on-primary font-bold text-sm">
+                        {getInitials(user.displayName)}
+                    </div>
+                )}
+            </div>
         </Link>
-    )
-}
+    );
+};
 
 
 const Header = ({ favoritesCount }) => {

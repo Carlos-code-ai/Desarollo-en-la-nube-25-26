@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 
 const PlusIcon = ({ className }) => (
@@ -11,26 +11,28 @@ const PlusIcon = ({ className }) => (
 
 const FloatingActionButton = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const buttonRef = React.useRef(null);
     const iconRef = React.useRef(null);
 
     const handleClick = () => {
-        // Animación de click y navegación
         gsap.to(buttonRef.current, { scale: 0.9, duration: 0.2, ease: 'power2.inOut', yoyo: true, repeat: 1, onComplete: () => {
              navigate('/add-suit');
         }});
     };
 
     const handleMouseEnter = () => {
-        // Animación de engranaje al pasar el ratón
         gsap.to(iconRef.current, { rotation: "+=90", scale: 1.1, duration: 0.4, ease: 'back.out(2)' });
         gsap.to(buttonRef.current, { scale: 1.1, duration: 0.3, ease: 'power2.out' });
     }
 
     const handleMouseLeave = () => {
-        // Vuelve al estado original
         gsap.to(iconRef.current, { rotation: "-=90", scale: 1, duration: 0.3, ease: 'power2.inOut' });
         gsap.to(buttonRef.current, { scale: 1, duration: 0.2, ease: 'power2.in' });
+    }
+
+    if (location.pathname === '/messages') {
+        return null;
     }
 
     return (

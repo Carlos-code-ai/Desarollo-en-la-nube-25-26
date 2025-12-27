@@ -4,7 +4,7 @@ import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 
 // Firebase and Auth
 import { db } from './firebase.js';
-import { ref, onValue, set, remove } from 'firebase/database';
+import { ref, onValue } from 'firebase/database';
 import useAuth from './hooks/useAuth.js';
 
 // --- Main Components ---
@@ -25,7 +25,7 @@ import AddSuitPage from './components/AddSuitPage.js';
 import EditProfilePage from './components/EditProfilePage.js';
 import PublicProfilePage from './components/PublicProfilePage.js';
 
-// Wrapper component to correctly pass route params as props to SuitDetailPage
+// Wrapper component to correctly pass route params as props
 const SuitDetailPageWrapper = (props) => {
     const { suitId } = useParams();
     const navigate = useNavigate();
@@ -34,34 +34,8 @@ const SuitDetailPageWrapper = (props) => {
 
 // Main App Component
 function App() {
-  const { user, loading } = useAuth();
-  const [favorites, setFavorites] = useState(new Set());
+  const { user, loading, favorites, toggleFavorite } = useAuth();
   const navigate = useNavigate();
-
-  // --- Firebase Listener for Favorites ---
-  useEffect(() => {
-    if (!user) {
-      setFavorites(new Set());
-      return;
-    }
-    const favoritesRef = ref(db, `users/${user.uid}/favorites`);
-    const unsubscribe = onValue(favoritesRef, (snapshot) => {
-      const data = snapshot.val();
-      setFavorites(new Set(data ? Object.keys(data) : []));
-    });
-    return () => unsubscribe();
-  }, [user]);
-
-  // --- Handlers ---
-  const handleToggleFavorite = async (suitId) => {
-    if (!user) return;
-    const favoriteRef = ref(db, `users/${user.uid}/favorites/${suitId}`);
-    if (favorites.has(suitId)) {
-      await remove(favoriteRef);
-    } else {
-      await set(favoriteRef, true);
-    }
-  };
 
   const handleSuitSelect = (suitId) => {
     if (suitId) {
@@ -71,7 +45,6 @@ function App() {
     }
   };
 
-  // --- Render Logic ---
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -87,20 +60,20 @@ function App() {
   const suitListProps = {
       onSuitSelect: handleSuitSelect,
       favorites: favorites,
-      onToggleFavorite: handleToggleFavorite,
+      onToggleFavorite: toggleFavorite,
   };
 
   return (
     <div className="bg-background min-h-screen flex flex-col">
       <Header favoritesCount={favorites.size} />
       
-      <main className="flex-grow container mx-auto p-4 pt-24 md:pt-28">
+      <main className="flex-grow w-full max-w-7xl mx-auto p-4 pt-24 md:pt-28">
         <Routes>
           <Route path="/" element={<SearchPage {...suitListProps} />} />
           <Route path="/search" element={<SearchPage {...suitListProps} />} />
           <Route 
             path="/suit/:suitId" 
-            element={<SuitDetailPageWrapper favorites={favorites} onToggleFavorite={handleToggleFavorite} />} 
+            element={<SuitDetailPageWrapper favorites={favorites} onToggleFavorite={toggleFavorite} />} 
           />
           <Route path="/add-suit" element={<AddSuitPage />} />
           <Route path="/messages" element={<MessagesPage />} />

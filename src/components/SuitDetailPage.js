@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { db } from '../firebase.js';
-import { ref, onValue, push, query, orderByChild, equalTo, get, serverTimestamp, set, update } from 'firebase/database';
+import { ref, onValue, push, query, orderByChild, equalTo, get, serverTimestamp, update } from 'firebase/database';
 import useAuth from '../hooks/useAuth.js';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
@@ -99,7 +98,7 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
       let disabled = [{ before: today }];
       bookings.forEach(booking => disabled.push({ from: booking.from, to: booking.to }));
       return disabled;
-  }, [bookings]);
+  }, [bookings, today]);
 
   useEffect(() => {
     if (dateRange.from && dateRange.to && suit && suit.price) {
@@ -164,7 +163,7 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
         
         const newBooking = {
             id: newBookingRef.key,
-            chatId: chatIdToNavigate, // <-- VINCULACIÓN DEL CHAT ID
+            chatId: chatIdToNavigate,
             suitId: suit.id,
             suitName: suit.name,
             suitImageUrl: suit.imageUrl,
@@ -196,64 +195,72 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
   const fullSuitData = suit && owner ? { ...suit, ownerName: owner.displayName, ownerPhotoURL: owner.photoURL } : null;
 
   return (
-    <div className="animate-fade-in max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
-      {loading && <div className="w-full h-screen grid place-items-center">...</div>}
-      {error && <p className="text-center text-error font-medium">{error}</p>}
+    <div className="animate-fade-in">
+      {loading && <div className="w-full h-screen grid place-items-center"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div></div>}
+      {error && <p className="text-center text-error font-medium py-10">{error}</p>}
       {fullSuitData && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 md:gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-12 lg:gap-x-16">
             <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-surface-container shadow-lg">
-                <button onClick={onBack} className="absolute top-4 left-4 z-10 h-10 w-10 grid place-items-center bg-background/70 backdrop-blur-sm rounded-full cursor-pointer transition-colors" aria-label="Volver">
+                <button onClick={onBack} className="absolute top-4 left-4 z-20 h-10 w-10 grid place-items-center bg-background/70 backdrop-blur-sm rounded-full cursor-pointer transition-colors" aria-label="Volver">
                     <span className="material-icons text-on-surface">arrow_back</span>
                 </button>
                 <img src={fullSuitData.imageUrl} alt={fullSuitData.name} className="w-full h-full object-cover" />
                 <HeartIcon isFavorite={favorites.has(fullSuitData.id)} onToggle={() => onToggleFavorite(fullSuitData.id)} />
+                
+                {fullSuitData.ownerId && (
+                    <Link to={`/user/${fullSuitData.ownerId}`} className="absolute bottom-4 left-4 z-10 group flex items-center space-x-3">
+                        <img
+                            src={fullSuitData.ownerPhotoURL}
+                            alt={fullSuitData.ownerName}
+                            className="h-12 w-12 rounded-full object-cover border-2 border-white/80 shadow-lg transition-transform transform group-hover:scale-110 duration-300 ease-in-out"
+                        />
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 text-white text-xs px-2 py-1 rounded-md absolute left-16 whitespace-nowrap">
+                            Ver perfil de {fullSuitData.ownerName}
+                        </div>
+                    </Link>
+                )}
             </div>
 
             <div className="mt-8 md:mt-0">
-              <h1 className="text-4xl font-bold tracking-tight text-on-surface">{fullSuitData.name}</h1>
-              {fullSuitData.ownerId && fullSuitData.ownerName && (
-                  <Link to={`/user/${fullSuitData.ownerId}`} className="flex items-center space-x-3 mt-3 group">
-                      <img src={fullSuitData.ownerPhotoURL} alt={fullSuitData.ownerName} className="h-10 w-10 rounded-full object-cover transition-transform group-hover:scale-110"/>
-                      <span className="text-on-surface-variant font-medium text-sm group-hover:text-primary transition-colors">Alquilado por {fullSuitData.ownerName}</span>
-                  </Link>
-              )}
-
-              <div className="mt-6"><p className="text-on-surface-variant leading-relaxed">{fullSuitData.description}</p></div>
+              <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-on-surface">{fullSuitData.name}</h1>
+              <div className="mt-4"><p className="text-on-surface-variant leading-relaxed">{fullSuitData.description}</p></div>
               
-              <div className="mt-8 p-6 bg-surface-container rounded-2xl space-y-4">
+              <div className="mt-6 p-4 sm:p-6 bg-surface-container rounded-2xl">
                   <div className="flex justify-between items-center">
                        <h2 className="text-xl font-bold text-on-surface">Alquilar</h2>
                        <p className="text-2xl font-bold text-primary">{fullSuitData.price}€<span className="text-sm font-normal text-on-surface-variant">/día</span></p>
                   </div>
 
-                  <div className="flex justify-center">
-                      <DayPicker mode="range" locale={es} selected={dateRange} onSelect={setDateRange} disabled={disabledDays} numberOfMonths={1} styles={{ root: { width: '100%', backgroundColor: 'var(--color-surface)', borderRadius: '1rem', padding: '0.5rem' }, caption: { color: 'var(--color-primary)'}, day: { color: 'var(--color-on-surface)'}, day_selected: { backgroundColor: 'var(--color-primary) !important', color: 'var(--color-on-primary) !important'}, day_disabled: { color: 'var(--color-on-surface-variant)', opacity: 0.4 } }} />
+                  <div className="flex justify-center mt-4">
+                      <DayPicker mode="range" locale={es} selected={dateRange} onSelect={setDateRange} disabled={disabledDays} numberOfMonths={1} styles={{ root: { width: '100%', border: 'none' }, caption_label: { color: 'var(--color-primary)'}, day: { color: 'var(--color-on-surface)'}, day_selected: { backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)'}, day_disabled: { opacity: 0.3 } }} />
                   </div>
                   
                    {totalPrice > 0 && 
-                     <div className="p-4 bg-primary/10 rounded-xl text-center">
-                       <p className="text-on-surface-variant">Precio total estimado:</p>
-                       <p className="text-2xl font-bold text-primary">{totalPrice.toFixed(2)}€</p>
+                     <div className="mt-2 p-3 bg-primary/10 rounded-xl text-center">
+                       <p className="text-sm text-on-surface-variant">Precio total estimado:</p>
+                       <p className="text-xl font-bold text-primary">{totalPrice.toFixed(2)}€</p>
                      </div>
                    }
               </div>
 
-              <div className="mt-8 flex flex-col gap-4">
-                  <button onClick={handleRentalRequest} disabled={!dateRange.from || !dateRange.to || submitting} className="w-full h-12 rounded-full bg-primary text-on-primary font-bold hover:scale-105 transition-transform disabled:bg-on-surface/10 disabled:text-on-surface/50 disabled:scale-100">
+              <div className="mt-6 flex flex-col gap-4">
+                  <button onClick={handleRentalRequest} disabled={!dateRange.from || !dateRange.to || submitting} className="w-full h-12 rounded-full bg-primary text-on-primary font-bold hover:bg-primary-dark transition-all disabled:bg-on-surface/10 disabled:text-on-surface/50 disabled:cursor-not-allowed">
                       {submitting ? 'Enviando Solicitud...' : 'Solicitar Alquiler y Chatear'}
                   </button>
               </div>
             </div>
           </div>
 
-          <div className="mt-12 pt-8 border-t border-outline/20">
-               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                   {fullSuitData.size && <DetailItem iconName="straighten" title="Talla" value={fullSuitData.size} />}
-                   {fullSuitData.eventType && <DetailItem iconName="celebration" title="Evento" value={capitalize(fullSuitData.eventType)} />}
-                   {fullSuitData.condition && <DetailItem iconName="check_circle" title="Condición" value={capitalize(fullSuitData.condition)} />}
-                   {fullSuitData.colors && <DetailItem iconName="palette" title="Color" value={capitalize(fullSuitData.colors)} />}
-               </div>
+          <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-outline/20">
+               <div className="max-w-5xl mx-auto">
+                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                     {fullSuitData.size && <DetailItem iconName="straighten" title="Talla" value={fullSuitData.size} />}
+                     {fullSuitData.eventType && <DetailItem iconName="celebration" title="Evento" value={capitalize(fullSuitData.eventType)} />}
+                     {fullSuitData.condition && <DetailItem iconName="verified" title="Condición" value={capitalize(fullSuitData.condition)} />}
+                     {fullSuitData.colors && <DetailItem iconName="palette" title="Color" value={capitalize(fullSuitData.colors)} />}
+                 </div>
+              </div>
           </div>
         </>
       )}

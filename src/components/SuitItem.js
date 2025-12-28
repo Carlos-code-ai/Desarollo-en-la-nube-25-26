@@ -35,7 +35,7 @@ const SuitItem = ({ suit }) => {
         <div className="w-full bg-surface-container rounded-2xl shadow-md overflow-hidden border border-outline/20 flex flex-col">
             <Link to={`/suit/${suit.id}`} className="w-full h-56 flex-shrink-0">
                 <img 
-                    src={suit.photos?.[0] || 'https://via.placeholder.com/400x500.png?text=Sin+Imagen'} 
+                    src={suit.imageUrls?.[0] || 'https://via.placeholder.com/400x500.png?text=Sin+Imagen'} 
                     alt={suit.name} 
                     className="w-full h-full object-cover"
                 />

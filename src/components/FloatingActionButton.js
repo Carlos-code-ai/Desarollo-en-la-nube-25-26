@@ -1,94 +1,57 @@
-
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { gsap } from 'gsap';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const FloatingActionButton = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const buttonRef = useRef(null);
-    const textRef = useRef(null);
-    const iconRef = useRef(null);
     const [isScrolled, setIsScrolled] = useState(false);
 
-    // Scroll handler to collapse button
+    const handleClick = () => {
+        navigate('/add-suit');
+    };
+
     useEffect(() => {
         const handleScroll = () => {
-            // Set state based on scroll position
+            // Show icon-only button if user has scrolled more than 50px
             setIsScrolled(window.scrollY > 50);
         };
 
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        // Initial check in case the page loads already scrolled
-        handleScroll();
-
-        // Cleanup listener on component unmount
+        window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, []); // Empty dependency array ensures this runs only once
-
-    // GSAP Animations for scroll-based collapse
-    useEffect(() => {
-        gsap.to(buttonRef.current, { 
-            width: isScrolled ? '56px' : '170px',
-            duration: 0.4, 
-            ease: 'power3.inOut' 
-        });
-        gsap.to(textRef.current, { 
-            opacity: isScrolled ? 0 : 1,
-            x: isScrolled ? -10 : 0,
-            duration: 0.3,
-            ease: 'power2.out' 
-        });
-        gsap.to(iconRef.current, {
-            rotation: isScrolled ? 180 : 0,
-            duration: 0.4,
-            ease: 'power3.inOut'
-        });
-    }, [isScrolled]);
-
-    const handleClick = () => {
-        // GSAP animation for tap effect
-        gsap.to(buttonRef.current, {
-            scale: 0.95,
-            duration: 0.1,
-            yoyo: true,
-            repeat: 1,
-            onComplete: () => {
-                navigate('/add-suit');
-            }
-        });
-    };
-
-    // Hide the button on specific pages where it's not needed
-    if ([`/add-suit`].includes(location.pathname)) {
-        return null;
-    }
+    }, []);
 
     return (
-        <div
-            className="fixed bottom-10 right-10 md:right-16 z-40"
+        <motion.button
+            onClick={handleClick}
+            className="fixed bottom-8 right-8 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-lg focus:outline-none z-40"
+            aria-label="Añadir nuevo traje"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ scale: 0, y: 100 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.5 }}
+            style={{ overflow: 'hidden' }} // Prevents content from spilling out during animation
         >
-            <button
-                ref={buttonRef}
-                onClick={handleClick}
-                className="flex items-center justify-center h-14 bg-primary text-on-primary shadow-2xl rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/30 overflow-hidden"
-                style={{ width: '170px' }} 
-                aria-label="Añadir nuevo traje"
-            >
-                <div ref={iconRef} className="absolute left-4 top-1/2 -translate-y-1/2">
-                     <svg className="h-7 w-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                </div>
-                <span 
-                    ref={textRef}
-                    className="font-semibold whitespace-nowrap pl-8"
-                    style={{ opacity: 1 }} 
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={isScrolled ? 'icon' : 'extended'}
+                    className="flex items-center justify-center px-6 h-16"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -20, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
                 >
-                    Añadir traje
-                </span>
-            </button>
-        </div>
+                    {isScrolled ? (
+                        <span className="material-icons text-3xl">add</span>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <span className="material-icons">add</span>
+                            <span className="font-semibold whitespace-nowrap">Añadir traje</span>
+                        </div>
+                    )}
+                </motion.div>
+            </AnimatePresence>
+        </motion.button>
     );
 };
 

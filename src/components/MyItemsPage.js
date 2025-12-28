@@ -1,145 +1,143 @@
 
-import React, { useState, useMemo } from 'react';
-import { rtdb, storage } from '../firebase.js';
-import { ref, remove, update } from 'firebase/database';
-import { ref as storageRef, uploadString, getDownloadURL } from 'firebase/storage';
+import React, { useState } from 'react';
 import useAuth from '../hooks/useAuth.js';
-import useRealtimeDB from '../hooks/useRealtimeDB.js';
+// The hook now takes the entire user object to handle different ID fields
+import useUserItems from '../hooks/useUserItems.js'; 
+import { useNavigate } from 'react-router-dom';
+import { getDatabase, ref, remove } from 'firebase/database';
+import { getStorage, ref as storageRef, deleteObject } from 'firebase/storage';
+import { motion, AnimatePresence } from 'framer-motion';
 
-import Modal from './Modal.js';
-import AddSuitForm from './AddSuitForm.js';
+// --- Individual Suit Item for the list (Modernized) ---
+const MySuitListItem = ({ suit, onEdit, onDelete, isDeleting }) => {
+    const { name, price, imageUrl, state } = suit;
 
-const EditIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>;
-const DeleteIcon = (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.124-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.077-2.09.921-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>;
-
-const MyItemsPage = () => {
-  const { user } = useAuth();
-  const { docs: allSuits, loading, error } = useRealtimeDB('trajes');
-
-  // More robust filtering to handle legacy data structures.
-  const myFilteredItems = useMemo(() => {
-    if (!user) return [];
-    return allSuits.filter(suit => {
-        const isOwnerByUID = suit.ownerId === user.uid;
-        const isOwnerByLegacyUsuario = suit.usuario === user.uid || (user.displayName && suit.usuario === user.displayName);
-        const isOwnerByLegacyPublicadoPor = user.displayName && suit.publicadoPor === user.displayName;
-        return isOwnerByUID || isOwnerByLegacyUsuario || isOwnerByLegacyPublicadoPor;
-    });
-  }, [allSuits, user]);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSuit, setEditingSuit] = useState(null);
-
-  const handleEdit = (suit) => {
-    setEditingSuit(suit);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (suitId) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este artículo? Esta acción no se puede deshacer.')) {
-      try {
-        await remove(ref(rtdb, `trajes/${suitId}`));
-      } catch (error) {
-        console.error("Error al eliminar el artículo:", error);
-        alert('Hubo un error al eliminar el artículo.');
-      }
-    }
-  };
-
-  // When updating, migrate the data to the new structure.
-  const handleUpdateSuit = async (updatedData) => {
-    if (!editingSuit?.id) return;
-
-    try {
-      const uploadedImageUrls = await Promise.all(
-        (updatedData.imageUrls || []).map(async (url) => {
-          if (url.startsWith('data:image')) {
-            const fileRef = storageRef(storage, `suits/${user.uid}/${Date.now()}`);
-            const uploadResult = await uploadString(fileRef, url, 'data_url');
-            return await getDownloadURL(uploadResult.ref);
-          }
-          return url;
-        })
-      );
-
-      const finalData = {
-        ...updatedData,
-        ownerId: user.uid, // Set the modern ownerId
-        imageUrls: uploadedImageUrls,
-        imageUrl: uploadedImageUrls[0] || '',
-        price: Number(updatedData.price) || 0,
-        usuario: null, // Remove legacy field
-        publicadoPor: null, // Remove legacy field
-      };
-
-      await update(ref(rtdb, `trajes/${editingSuit.id}`), finalData);
-
-      setIsModalOpen(false);
-      setEditingSuit(null);
-    } catch (error) {
-      console.error("Error al actualizar el artículo:", error);
-      alert('Hubo un error al guardar los cambios.');
-    }
-  };
-
-  const renderContent = () => {
-    if (loading) {
-      return <div className="text-center py-16"><p>Cargando tus artículos...</p></div>;
-    }
-    if (error) {
-      return <div className="text-center py-16 text-error"><p>Error al cargar los artículos.</p></div>;
-    }
-    if (myFilteredItems.length === 0) {
-      return (
-        <div className="text-center py-16 px-6 bg-surface-container rounded-3xl">
-          <h2 className="text-xl font-semibold text-on-surface">Aún no has publicado nada</h2>
-          <p className="text-on-surface-variant mt-2">Usa el botón de <span className="font-semibold text-primary">"Añadir traje"</span> para empezar a ganar dinero.</p>
-        </div>
-      );
-    }
     return (
-      <div className="space-y-4">
-        {myFilteredItems.map(item => {
-          const displayImage = (item.imageUrls && item.imageUrls[0]) || item.imageUrl;
-          return (
-            <div key={item.id} className="flex items-center space-x-4 bg-surface p-3 rounded-2xl shadow-sm transition-shadow hover:shadow-md">
-              <img src={displayImage} alt={item.name} className="h-24 w-24 rounded-lg object-cover bg-surface-container" />
-              <div className="flex-grow">
-                <h2 className="font-bold text-lg text-on-surface">{item.name}</h2>
-                <p className="text-on-surface-variant">€{item.price}/día</p>
-                <p className={`text-sm font-semibold mt-1 ${item.isAvailable === false ? 'text-error' : 'text-tertiary'}`}>
-                  {item.isAvailable === false ? 'Alquilado' : 'Disponible'}
-                </p>
-              </div>
-              <div className="flex flex-col space-y-2">
-                <button onClick={() => handleEdit(item)} className="flex items-center justify-center space-x-2 w-24 px-3 py-2 rounded-lg bg-surface-container-high hover:bg-surface-container-highest transition-colors">
-                  <EditIcon className="h-5 w-5" />
-                  <span className="text-sm font-medium">Editar</span>
-                </button>
-                <button onClick={() => handleDelete(item.id)} className="flex items-center justify-center space-x-2 w-24 px-3 py-2 rounded-lg bg-error-container text-on-error-container hover:bg-error-container/80 transition-colors">
-                  <DeleteIcon className="h-5 w-5" />
-                  <span className="text-sm font-medium">Eliminar</span>
-                </button>
-              </div>
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
+            className="flex items-center gap-4 p-3 bg-surface-container rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300"
+        >
+            <img src={Array.isArray(suit.imageUrls) && suit.imageUrls.length > 0 ? suit.imageUrls[0] : suit.imageUrl} alt={name} className="w-16 h-20 object-cover rounded-lg" />
+            <div className="flex-grow">
+                <h3 className="font-bold text-on-surface text-lg">{name}</h3>
+                <p className="text-primary font-semibold">€{price}/día</p>
+                <p className="text-sm text-on-surface-variant capitalize">{state || 'Disponible'}</p>
             </div>
-          );
-        })}
-      </div>
+            <div className="flex items-center space-x-2">
+                <button 
+                    onClick={onEdit} 
+                    aria-label="Editar"
+                    className="h-10 w-10 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all duration-300 transform hover:scale-110"
+                >
+                    <span className="material-icons-outlined text-xl">edit</span>
+                </button>
+                
+                <button 
+                    onClick={onDelete} 
+                    disabled={isDeleting}
+                    aria-label="Eliminar"
+                    className="h-10 w-10 flex items-center justify-center rounded-full bg-surface-container-high text-error hover:bg-error/10 transition-all duration-300 transform hover:scale-110 disabled:opacity-50"
+                >
+                    {isDeleting 
+                        ? <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, duration: 1, ease: 'linear'}}><span className="material-icons-outlined text-xl">sync</span></motion.div>
+                        : <span className="material-icons-outlined text-xl">delete</span>
+                    }
+                </button>
+            </div>
+        </motion.div>
     );
-  }
+};
 
-  return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col space-y-6">
-      {renderContent()}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <AddSuitForm
-          onSubmit={handleUpdateSuit}
-          onCancel={() => { setIsModalOpen(false); setEditingSuit(null); }}
-          suitToEdit={editingSuit}
-        />
-      </Modal>
-    </div>
-  );
+
+// --- Main Page Component ---
+const MyItemsPage = () => {
+    const { user } = useAuth();
+    // Pass the entire user object to the hook
+    const { items: myItems, loading, error } = useUserItems(user);
+    const navigate = useNavigate();
+    const [deletingId, setDeletingId] = useState(null);
+
+    const handleEdit = (suitId) => {
+        navigate(`/edit-suit/${suitId}`);
+    };
+
+    const handleDelete = async (suit) => {
+        if (!suit || !suit.id) return;
+        
+        const isConfirmed = window.confirm(`¿Estás seguro de que quieres eliminar "${suit.name}"? Esta acción no se puede deshacer.`);
+        if (!isConfirmed) return;
+
+        setDeletingId(suit.id);
+        try {
+            const storage = getStorage();
+            const imageUrls = suit.imageUrls || (suit.imageUrl ? [suit.imageUrl] : []);
+            
+            for (const url of imageUrls) {
+                 if (url && url.includes('firebasestorage.googleapis.com')) {
+                    const imageRef = storageRef(storage, url);
+                    await deleteObject(imageRef).catch(err => console.warn("Could not delete image.", err));
+                }
+            }
+
+            const db = getDatabase();
+            const suitRef = ref(db, `trajes/${suit.id}`);
+            await remove(suitRef);
+
+        } catch (error) {
+            console.error("Error deleting suit:", error);
+            alert("Hubo un problema al eliminar el traje. Por favor, inténtalo de nuevo.");
+        } finally {
+            setDeletingId(null);
+        }
+    };
+    
+    if (error) {
+        return <div className="text-center py-10 text-error">Error al cargar tus artículos. Por favor, recarga la página.</div>
+    }
+
+    if (loading) {
+        return <div className="text-center py-10 text-on-surface-variant">Cargando tus trajes...</div>;
+    }
+
+    if (myItems.length === 0) {
+        return (
+             <div className="text-center py-12 px-6">
+                <h2 className="text-2xl font-bold text-on-surface mb-4">Tu armario está vacío</h2>
+                <p className="text-on-surface-variant mb-6">Añade tu primer traje y empieza a compartir tu estilo.</p>
+                <button onClick={() => navigate('/add-suit')} className="px-6 py-3 bg-primary text-on-primary rounded-full font-bold shadow-lg hover:bg-opacity-90 transition-all">
+                    Añadir Traje
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="w-full max-w-2xl mx-auto p-4">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-on-surface">Tu Armario ({myItems.length})</h2>
+                 <button onClick={() => navigate('/add-suit')} className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-full font-semibold hover:bg-opacity-90 transition-colors">
+                    <span className="material-icons-outlined">add</span>
+                    <span>Añadir Traje</span>
+                </button>
+            </div>
+            <div className="space-y-4">
+                <AnimatePresence>
+                    {myItems.map(item => (
+                        <MySuitListItem 
+                            key={item.id} 
+                            suit={item} 
+                            onEdit={() => handleEdit(item.id)}
+                            onDelete={() => handleDelete(item)}
+                            isDeleting={deletingId === item.id}
+                        />
+                    ))}
+                </AnimatePresence>
+            </div>
+        </div>
+    );
 };
 
 export default MyItemsPage;

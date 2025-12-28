@@ -1,269 +1,199 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useDropzone } from 'react-dropzone';
 
-// --- Modern UI Components ---
+// --- Icons ---
+const HangerIcon = (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8.38 5.54c.7-1.4 2.1-2.43 3.62-2.43s2.92 1.03 3.62 2.43l3.2 6.46c.4.8.2 1.8-.5 2.4s-1.8.5-2.4-.5L12 8.5l-3.32 5.4c-.6.8-1.7.9-2.4.4s-1-1.6-.5-2.4l3.2-6.46z"/><path d="M8 18v2"/><path d="M16 18v2"/><path d="M12 12v10"/></svg>;
+const UploadIcon = (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
+const LinkIcon = (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"/></svg>;
 
-const ModernSelect = ({ id, label, options, value, onChange }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const rootRef = useRef(null);
-    const placeholderRef = useRef(null);
-    const optionsRef = useRef(null);
+// --- Form Field Components ---
+const InputField = ({ label, name, value, onChange, placeholder, type = 'text', required = true }) => (
+    <div>
+        <label htmlFor={name} className="block text-sm font-medium text-on-surface-variant mb-1">{label}</label>
+        <input 
+            type={type} 
+            name={name} 
+            id={name} 
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            required={required}
+            className="w-full bg-surface-container-high border-2 border-outline/30 rounded-lg px-3 py-2 text-on-surface focus:outline-none focus:border-primary transition-colors"
+        />
+    </div>
+);
 
-    const handleSelect = (optionValue) => {
-        onChange({ target: { name: id, value: optionValue } });
-        setIsOpen(false);
-    };
+const CustomSelect = ({ label, name, value, onChange, options, required = true }) => (
+    <div>
+        <label htmlFor={name} className="block text-sm font-medium text-on-surface-variant mb-1">{label}</label>
+        <select 
+            name={name} 
+            id={name} 
+            value={value}
+            onChange={onChange}
+            required={required}
+            className="w-full bg-surface-container-high border-2 border-outline/30 rounded-lg px-3 py-2 text-on-surface focus:outline-none focus:border-primary transition-colors appearance-none"
+        >
+            {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+        </select>
+    </div>
+);
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (rootRef.current && !rootRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    useEffect(() => {
-        const hasValue = value && value !== '';
-        gsap.to(placeholderRef.current, {
-            y: isOpen || hasValue ? -24 : 0,
-            scale: isOpen || hasValue ? 0.85 : 1,
-            color: isOpen ? '#3B82F6' : '#9CA3AF', // Changed from #A855F7 to #3B82F6 (blue-500)
-            duration: 0.2,
-            ease: 'power2.out',
-        });
-        gsap.to(optionsRef.current, {
-            opacity: isOpen ? 1 : 0,
-            y: isOpen ? 0 : -10,
-            display: isOpen ? 'block' : 'none',
-            duration: 0.2,
-            ease: 'power2.out',
-        });
-    }, [isOpen, value]);
-
-    return (
-        <div ref={rootRef} className="relative w-full">
-            <label ref={placeholderRef} htmlFor={id} className="absolute left-4 top-3.5 text-on-surface-variant origin-top-left transition-transform duration-200 pointer-events-none">
-                {label}
-            </label>
-            <button
-                type="button"
-                id={id}
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between w-full h-14 px-4 text-left bg-surface-container rounded-lg border border-outline/50 focus:border-primary focus:ring-2 focus:ring-primary/50 transition"
-            >
-                <span className="text-on-surface">{value || ''}</span>
-                <span className={`material-icons text-on-surface-variant transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
-                    expand_more
-                </span>
-            </button>
-            <div ref={optionsRef} className="absolute z-10 w-full mt-1 bg-surface-container-high rounded-lg shadow-xl overflow-hidden">
-                <ul>
-                    {options.map(option => (
-                        <li
-                            key={option.value}
-                            onClick={() => handleSelect(option.value)}
-                            className="px-4 py-3 hover:bg-primary/10 text-on-surface cursor-pointer transition-colors"
-                        >
-                            {option.label}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        </div>
-    );
-};
-
-const ImageManager = ({ imageUrls, onImagesChange }) => {
+// --- Image Uploader Component ---
+const ImageUploader = ({ images, setImages }) => {
     const [urlInput, setUrlInput] = useState('');
-    const fileInputRef = useRef(null);
 
-    const handleAddUrl = () => {
-        if (urlInput && !imageUrls.includes(urlInput)) {
-            onImagesChange([...imageUrls, urlInput]);
-            setUrlInput('');
-        }
-    };
-    
-    const handleFileSelect = (event) => {
-        const files = Array.from(event.target.files);
-        if (files.length === 0) return;
-
-        files.forEach(file => {
+    const onDrop = (acceptedFiles) => {
+        acceptedFiles.forEach(file => {
             const reader = new FileReader();
-            reader.onload = (e) => {
-                const base64String = e.target.result;
-                 if (!imageUrls.includes(base64String)) {
-                    onImagesChange(prev => [...prev, base64String]);
-                }
-            };
+            reader.onload = () => setImages(prev => [...prev, reader.result]);
             reader.readAsDataURL(file);
         });
     };
 
-    const handleRemoveImage = (index) => {
-        onImagesChange(imageUrls.filter((_, i) => i !== index));
+    const addUrl = () => {
+        if (urlInput && !images.includes(urlInput)) {
+            setImages(prev => [...prev, urlInput]);
+        }
+        setUrlInput('');
     };
+
+    const removeImage = (index) => {
+        setImages(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
+        onDrop, 
+        accept: { 'image/*': ['.jpeg', '.png', '.webp'] }
+    });
 
     return (
         <div className="space-y-4">
-             <div className="grid grid-cols-3 gap-2 min-h-[120px] p-2 rounded-lg bg-surface-container border border-dashed border-outline/30">
-                {imageUrls.map((url, index) => (
-                    <div key={index} className="relative group aspect-square">
-                        <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover rounded-md"/>
-                        <button 
-                            type="button" 
-                            onClick={() => handleRemoveImage(index)}
-                            className="absolute top-1 right-1 h-6 w-6 grid place-items-center bg-black/50 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                            <span className="material-icons text-sm">close</span>
-                        </button>
-                    </div>
-                ))}
+            <div {...getRootProps()} className={`relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl cursor-pointer transition-all ${isDragActive ? 'border-primary bg-primary/10' : 'border-outline-variant'}`}>
+                <input {...getInputProps()} />
+                <UploadIcon className={`h-12 w-12 transition-transform ${isDragActive ? 'scale-110' : ''}`} />
+                <p className="mt-2 text-center text-on-surface-variant">
+                    {isDragActive ? "Suelta las imágenes aquí" : "Arrastra imágenes o haz clic para seleccionar"}
+                </p>
             </div>
+
             <div className="flex gap-2">
                 <div className="relative flex-grow">
-                     <span className="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">link</span>
-                     <input
-                        type="url"
-                        value={urlInput}
-                        onChange={(e) => setUrlInput(e.target.value)}
-                        placeholder="Pegar URL de la imagen"
-                        className="w-full h-11 pl-10 pr-4 rounded-lg bg-surface-container border-outline/50 focus:border-primary focus:ring-primary transition"
+                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-on-surface-variant" />
+                    <input 
+                        type="text" 
+                        value={urlInput} 
+                        onChange={e => setUrlInput(e.target.value)} 
+                        placeholder="O pega una URL de imagen aquí"
+                        className="w-full bg-surface-container-high border-2 border-outline/30 rounded-lg pl-10 pr-3 py-2 text-on-surface focus:outline-none focus:border-primary transition-colors"
                     />
                 </div>
-                <button type="button" onClick={handleAddUrl} className="h-11 px-4 bg-primary/20 text-primary font-semibold rounded-lg hover:bg-primary/30 transition">
-                    Añadir
-                </button>
+                <button type="button" onClick={addUrl} className="px-4 py-2 bg-primary text-on-primary rounded-lg font-semibold hover:bg-primary/90 transition-colors">Añadir URL</button>
             </div>
-            <button
-                type="button"
-                onClick={() => fileInputRef.current.click()}
-                className="w-full h-12 flex items-center justify-center gap-2 rounded-lg bg-surface-container-high hover:bg-surface-container-highest transition-colors"
-            >
-                <span className="material-icons text-on-surface-variant">upload</span>
-                <span className="font-semibold text-on-surface">Subir desde dispositivo</span>
-            </button>
-            <input
-                type="file"
-                multiple
-                accept="image/*"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileSelect}
-            />
+
+            <div className="grid grid-cols-3 gap-3 pt-2">
+                {images.map((img, i) => (
+                    <motion.div key={i} className="relative group aspect-square" layout initial={{ scale: 0.8 }} animate={{ scale: 1 }}>
+                        <img src={img} alt={`preview ${i}`} className="w-full h-full object-cover rounded-lg"/>
+                        <button type="button" onClick={() => removeImage(i)} className="absolute top-1 right-1 h-6 w-6 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
+                    </motion.div>
+                ))}
+            </div>
         </div>
     );
 };
 
-const InputField = ({ id, label, ...props }) => (
-    <div className="relative">
-        <input
-            id={id}
-            {...props}
-            placeholder=" " 
-            className="block px-4 h-14 w-full text-on-surface bg-surface-container rounded-lg border border-outline/50 appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary peer transition"
-        />
-        <label
-            htmlFor={id}
-            className="absolute text-sm text-on-surface-variant duration-300 transform -translate-y-4 scale-75 top-4 z-10 origin-[0] left-4 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4"
-        >
-            {label}
-        </label>
-    </div>
-);
 
+// --- Main Form Component ---
+const AddSuitForm = ({ onSubmit, onCancel, isLoading, suitToEdit }) => {
+    const [suit, setSuit] = useState({
+        name: '',
+        description: '',
+        size: 'M',
+        color: 'Negro',
+        price: '',
+        imageUrls: [],
+    });
 
-// --- AddSuitForm ---
-// MODIFIED: Now takes a generic `onSubmit` prop for both creating and editing.
-const AddSuitForm = ({ onSubmit, onCancel, suitToEdit }) => {
-  const [suitData, setSuitData] = useState({});
-  const [error, setError] = useState('');
-  const isEditMode = !!suitToEdit;
+    useEffect(() => {
+        if (suitToEdit) {
+            setSuit({
+                name: suitToEdit.name || '',
+                description: suitToEdit.description || '',
+                size: suitToEdit.size || 'M',
+                color: suitToEdit.color || 'Negro',
+                price: suitToEdit.price || '',
+                imageUrls: suitToEdit.imageUrls || [],
+            });
+        }
+    }, [suitToEdit]);
 
-  useEffect(() => {
-    if (suitToEdit) {
-        const images = suitToEdit.imageUrls || (suitToEdit.imageUrl ? [suitToEdit.imageUrl] : []);
-        setSuitData({ ...suitToEdit, imageUrls: images });
-    } else {
-        setSuitData({ imageUrls: [] });
-    }
-  }, [suitToEdit]);
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setSuit(prev => ({ ...prev, [name]: value }));
+    };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setSuitData(prev => ({ ...prev, [name]: value }));
-  };
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (suit.imageUrls.length === 0) {
+            alert('Por favor, añade al menos una imagen.');
+            return;
+        }
+        onSubmit(suit);
+    };
 
-  const handleImagesChange = (newImageUrls) => {
-    setSuitData(prev => ({ ...prev, imageUrls: newImageUrls }));
-  };
+    const formTitle = suitToEdit ? "Editar Traje" : "Añadir Nuevo Traje";
+    
+    const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(s => ({ value: s, label: s }));
+    const COLORS = ['Negro', 'Azul', 'Gris', 'Blanco', 'Rojo', 'Verde', 'Otro'].map(c => ({ value: c, label: c }));
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (suitData.imageUrls.length === 0) {
-        setError('Por favor, añade al menos una imagen.');
-        return;
-    }
-    setError('');
-    // MODIFIED: Call the generic onSubmit prop with the current suit data.
-    onSubmit(suitData);
-  };
-
-  const eventOptions = [ { value: "boda", label: "Boda" }, { value: "gala", label: "Gala" }, { value: "negocios", label: "Negocios" }, { value: "fiesta", label: "Fiesta" }, { value: "otro", label: "Otro" } ];
-  const conditionOptions = [ { value: "nuevo", label: "Nuevo" }, { value: "como-nuevo", label: "Como nuevo" }, { value: "bueno", label: "Bueno" }, { value: "usado", label: "Usado" } ];
-
-  return (
-    <form onSubmit={handleSubmit} className="p-4 sm:p-6 bg-surface rounded-2xl w-full max-w-4xl mx-auto shadow-xl">
-        <h2 className="text-2xl sm:text-3xl font-bold text-on-surface mb-8">
-            {isEditMode ? 'Editar Traje' : 'Añadir Traje'}
-        </h2>
-      
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1">
-                <h2 className="text-lg font-medium text-on-surface mb-2">Imágenes</h2>
-                <ImageManager imageUrls={suitData.imageUrls || []} onImagesChange={handleImagesChange} />
+    return (
+        <form onSubmit={handleSubmit} className="max-w-4xl mx-auto bg-surface p-8 rounded-2xl shadow-xl">
+            <div className="flex items-center gap-4 mb-8">
+                <HangerIcon className="h-8 w-8 text-primary" />
+                <h1 className="text-3xl font-bold text-on-surface">{formTitle}</h1>
             </div>
 
-            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="sm:col-span-2">
-                    <InputField id="name" name="name" label="Nombre del Traje" type="text" required value={suitData.name || ''} onChange={handleChange} />
-                </div>
-                
-                <InputField id="price" name="price" label="Precio por día (€)" type="number" required value={suitData.price || ''} onChange={handleChange} step="0.01" />
-                <InputField id="size" name="size" label="Talla" type="text" required value={suitData.size || ''} onChange={handleChange} />
-
-                <ModernSelect id="eventType" name="eventType" label="Tipo de Evento" options={eventOptions} value={suitData.eventType || ''} onChange={handleChange} />
-                <ModernSelect id="condition" name="condition" label="Estado" options={conditionOptions} value={suitData.condition || ''} onChange={handleChange} />
-
-                <div className="sm:col-span-2">
-                    <InputField id="colors" name="colors" label="Colores" type="text" value={suitData.colors || ''} onChange={handleChange} placeholder="Ej: Negro, Azul marino" />
-                </div>
-                
-                <div className="sm:col-span-2">
-                    <InputField id="materials" name="materials" label="Materiales" type="text" value={suitData.materials || ''} onChange={handleChange} placeholder="Ej: Lana, Seda, Algodón" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* --- Left Column: Images -- */}
+                <div className="space-y-2">
+                    <h2 class="text-lg font-semibold text-on-surface">Imágenes</h2>
+                    <ImageUploader images={suit.imageUrls} setImages={(imgs) => setSuit(p => ({...p, imageUrls: imgs}))} />
                 </div>
 
-                <div className="sm:col-span-2">
-                    <InputField as="textarea" id="description" name="description" label="Descripción" rows="4" value={suitData.description || ''} onChange={handleChange} />
+                {/* --- Right Column: Details -- */}
+                <div className="space-y-4">
+                    <InputField label="Nombre del Traje" name="name" value={suit.name} onChange={handleChange} placeholder="Ej: Esmoquin de Gala Negro" />
+                    <div>
+                        <label htmlFor="description" className="block text-sm font-medium text-on-surface-variant mb-1">Descripción</label>
+                        <textarea name="description" id="description" value={suit.description} onChange={handleChange} placeholder="Describe el estilo, la tela, la ocasión ideal..." rows="4" className="w-full bg-surface-container-high border-2 border-outline/30 rounded-lg px-3 py-2 text-on-surface focus:outline-none focus:border-primary transition-colors" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <CustomSelect label="Talla" name="size" value={suit.size} onChange={handleChange} options={SIZES} />
+                        <CustomSelect label="Color Principal" name="color" value={suit.color} onChange={handleChange} options={COLORS} />
+                    </div>
+                    <InputField label="Precio por día (€)" name="price" value={suit.price} onChange={handleChange} placeholder="25" type="number" />
                 </div>
             </div>
-        </div>
 
-        {error && <p className="text-error text-sm mt-6 text-center">{error}</p>}
-
-        <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-outline/20">
-            <button type="button" onClick={onCancel} className="px-6 py-2 rounded-full font-semibold text-on-surface hover:bg-on-surface/10 transition-colors">
-            Cancelar
-            </button>
-            <button type="submit" className="px-8 py-2 rounded-full bg-primary text-on-primary font-bold hover:bg-primary-dark transition-all">
-                {isEditMode ? 'Guardar Cambios' : 'Añadir Traje'}
-            </button>
-        </div>
-    </form>
-  );
+            {/* --- Action Buttons -- */}
+            <div className="flex justify-end gap-4 mt-12 pt-6 border-t border-outline/20">
+                <motion.button type="button" onClick={onCancel} className="px-6 py-2 rounded-full font-semibold text-on-surface-variant bg-surface-container hover:bg-surface-container-high transition-colors" whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+                    Cancelar
+                </motion.button>
+                <motion.button type="submit" disabled={isLoading} className="px-8 py-2 rounded-full font-semibold text-on-primary bg-primary hover:bg-primary/90 disabled:bg-primary/50 flex items-center gap-2" whileHover={{ y: -2, boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} whileTap={{ scale: 0.98 }}>
+                    {isLoading ? (
+                        <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Guardando...</span>
+                        </>
+                    ) : (suitToEdit ? 'Guardar Cambios' : 'Añadir Traje')}
+                </motion.button>
+            </div>
+        </form>
+    );
 };
 
 export default AddSuitForm;

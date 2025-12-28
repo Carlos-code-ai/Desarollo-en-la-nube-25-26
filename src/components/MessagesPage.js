@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { rtdb } from '../firebase.js'; // Use rtdb
+import { rtdb } from '../firebase.js';
 import { ref, onValue, push, update, serverTimestamp, query, orderByChild, equalTo, increment } from 'firebase/database';
 import useAuth from '../hooks/useAuth.js';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const getOtherUserId = (chat, currentUser) => {
     if (!chat || !chat.members || !currentUser) return null;
@@ -13,12 +13,12 @@ const getOtherUserId = (chat, currentUser) => {
     return members.find(id => id !== currentUser.uid);
 };
 
-const RentalRequestHeader = ({ booking, onUpdateStatus }) => {
+const BookingStatusDisplay = ({ booking, isOwner, onUpdateStatus }) => {
     if (!booking) return null;
 
     const { startDate, endDate, totalPrice, status } = booking;
-    const formattedStartDate = format(new Date(startDate), "d MMM yyyy", { locale: es });
-    const formattedEndDate = format(new Date(endDate), "d MMM yyyy", { locale: es });
+    const formattedStartDate = startDate ? format(new Date(startDate), "d MMM yyyy", { locale: es }) : '';
+    const formattedEndDate = endDate ? format(new Date(endDate), "d MMM yyyy", { locale: es }) : '';
 
     const getStatusInfo = () => {
         switch (status) {
@@ -37,9 +37,9 @@ const RentalRequestHeader = ({ booking, onUpdateStatus }) => {
                      <span className="text-xs text-on-surface-variant">Solicitud de Alquiler</span>
                      <span className="font-bold text-on-surface text-sm">{formattedStartDate} - {formattedEndDate}</span>
                 </div>
-                <span className="font-bold text-primary text-lg">{totalPrice.toFixed(2)}€</span>
+                <span className="font-bold text-primary text-lg">{(totalPrice || 0).toFixed(2)}€</span>
             </div>
-            {status === 'pending' && (
+            {isOwner && status === 'pending' && (
                 <div className="flex gap-2 mt-3">
                     <button onClick={() => onUpdateStatus('accepted')} className="flex-1 h-9 flex items-center justify-center gap-2 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors text-sm font-bold">
                         <span className="material-icons text-lg">check</span>
@@ -68,26 +68,27 @@ const ChatView = ({ chatId }) => {
     const [chatInfo, setChatInfo] = useState(null);
     const [booking, setBooking] = useState(null);
     const [loading, setLoading] = useState(true);
+    
     const messagesEndRef = useRef(null);
+    const messageContainerRef = useRef(null);
 
     useEffect(() => {
         setLoading(true);
-        const chatRef = ref(rtdb, `chats/${chatId}`);
+        setMessages([]);
 
+        const chatRef = ref(rtdb, `chats/${chatId}`);
+        
         if (user?.uid) {
-            const unreadCountRef = ref(rtdb, `chats/${chatId}/unreadCount`);
-            update(unreadCountRef, { [user.uid]: 0 }).catch(err => console.error("Failed to reset unread count", err));
+            const unreadCountRef = ref(rtdb, `chats/${chatId}/unreadCount/${user.uid}`);
+            update(ref(rtdb), { [unreadCountRef.path]: 0 }).catch(err => console.error("Failed to reset unread count", err));
         }
 
         const unsubscribeChat = onValue(chatRef, (snapshot) => {
             const chatData = snapshot.val();
             setChatInfo(chatData);
-
-            if (chatData && chatData.bookingId) {
+            if (chatData?.bookingId) {
                 const bookingRef = ref(rtdb, `bookings/${chatData.bookingId}`);
-                onValue(bookingRef, (bookingSnapshot) => {
-                    setBooking(bookingSnapshot.val());
-                });
+                onValue(bookingRef, (bookingSnapshot) => setBooking({ id: bookingSnapshot.key, ...bookingSnapshot.val() }));
             }
             setLoading(false);
         }, () => setLoading(false));
@@ -95,62 +96,63 @@ const ChatView = ({ chatId }) => {
         const messagesRef = query(ref(rtdb, `messages/${chatId}`), orderByChild('timestamp'));
         const unsubscribeMessages = onValue(messagesRef, (snapshot) => {
             const msgs = [];
-            snapshot.forEach(childSnapshot => { msgs.push({ id: childSnapshot.key, ...childSnapshot.val() }); });
+            snapshot.forEach(childSnapshot => msgs.push({ id: childSnapshot.key, ...childSnapshot.val() }));
             setMessages(msgs);
         });
 
         return () => {
             unsubscribeChat();
             unsubscribeMessages();
-        }
+        };
     }, [chatId, user?.uid]);
 
+    // Smart scrolling effect
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        const container = messageContainerRef.current;
+        if (!container) return;
+
+        const scrollThreshold = 150; // pixels from bottom
+        const isNearBottom = container.scrollHeight - container.clientHeight - container.scrollTop < scrollThreshold;
+
+        if (isNearBottom) {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
     }, [messages]);
 
-    const handleSendMessage = async (e, systemMessage = null) => {
+    const handleSendMessage = async (e) => {
         e?.preventDefault();
-        const messageText = systemMessage || newMessage;
-        if (messageText.trim() === '' || !user || !chatInfo) return;
+        if (newMessage.trim() === '' || !user || !chatInfo) return;
         
         const otherUserId = getOtherUserId(chatInfo, user);
         if (!otherUserId) return;
 
-        const messageData = {
-            senderId: user.uid,
-            text: messageText,
-            timestamp: serverTimestamp(),
-            isSystem: !!systemMessage
-        };
-
-        const rootRef = ref(rtdb);
+        const messageData = { senderId: user.uid, text: newMessage, timestamp: serverTimestamp() };
         const updates = {};
         const newMessageKey = push(ref(rtdb, `messages/${chatId}`)).key;
 
         updates[`/messages/${chatId}/${newMessageKey}`] = messageData;
-        updates[`/chats/${chatId}/lastMessage`] = messageText;
+        updates[`/chats/${chatId}/lastMessage`] = newMessage;
         updates[`/chats/${chatId}/timestamp`] = serverTimestamp();
-        if (!systemMessage) {
-             updates[`/chats/${chatId}/unreadCount/${otherUserId}`] = increment(1);
-        }
+        updates[`/chats/${chatId}/unreadCount/${otherUserId}`] = increment(1);
 
-        await update(rootRef, updates);
-        if (!systemMessage) {
-            setNewMessage('');
-        }
+        await update(ref(rtdb), updates);
+        setNewMessage('');
     };
 
     const handleUpdateBookingStatus = async (newStatus) => {
         if (!booking) return;
         const bookingRef = ref(rtdb, `bookings/${booking.id}`);
-        try {
-            await update(bookingRef, { status: newStatus });
-            const systemMessage = `La solicitud de alquiler ha sido ${newStatus === 'accepted' ? 'aceptada' : 'rechazada'}.`;
-            handleSendMessage(null, systemMessage);
-        } catch (error) {
-            console.error("Error actualizando el estado del alquiler:", error);
-        }
+        const systemMessage = `La solicitud ha sido ${newStatus === 'accepted' ? 'aceptada' : 'rechazada'}.`;
+        
+        const messageData = { senderId: 'system', text: systemMessage, timestamp: serverTimestamp(), isSystem: true };
+        const newMessageKey = push(ref(rtdb, `messages/${chatId}`)).key;
+
+        const updates = {};
+        updates[`/bookings/${booking.id}/status`] = newStatus;
+        updates[`/messages/${chatId}/${newMessageKey}`] = messageData;
+        updates[`/chats/${chatId}/lastMessage`] = systemMessage;
+
+        await update(ref(rtdb), updates);
     };
     
     if (loading) return <div className="h-full grid place-items-center"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div></div>;
@@ -161,7 +163,7 @@ const ChatView = ({ chatId }) => {
     const isOwner = booking && user && booking.ownerId === user.uid;
 
     return (
-        <div className="flex flex-col h-full bg-surface-container-low rounded-2xl">
+        <div className="flex flex-col h-full bg-surface-container-low rounded-2xl relative">
             <Link to={`/user/${otherUserId}`} className="flex items-center p-3 border-b border-outline/30 rounded-t-2xl hover:bg-surface-container transition-colors">
                 <img src={otherUser.photo} alt={otherUser.name} className="w-10 h-10 rounded-full mr-3 object-cover"/>
                 <div className="flex-grow">
@@ -170,15 +172,15 @@ const ChatView = ({ chatId }) => {
                 </div>
             </Link>
 
-            {isOwner && <RentalRequestHeader booking={booking} onUpdateStatus={handleUpdateBookingStatus} />}
+            {booking && <BookingStatusDisplay booking={booking} isOwner={isOwner} onUpdateStatus={handleUpdateBookingStatus} />}
 
-            <div className="flex-grow p-4 overflow-y-auto">
+            <div ref={messageContainerRef} className="flex-grow p-4 overflow-y-auto">
                 {messages.map(msg => (
                     <div key={msg.id} className={`flex my-2 ${msg.isSystem ? 'justify-center' : (msg.senderId === user.uid ? 'justify-end' : 'justify-start')}`}>
                          {msg.isSystem ? (
                             <div className="px-3 py-1 rounded-full bg-surface-container text-xs text-on-surface-variant">{msg.text}</div>
                          ) : (
-                            <div className={`px-4 py-2 rounded-2xl max-w-xs lg:max-w-md ${msg.senderId === user.uid ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface'}`}>
+                            <div className={`px-4 py-2 rounded-2xl max-w-xs lg:max-w-md ${msg.senderId === user.uid ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface'}`}>
                                 <p className="text-sm">{msg.text}</p>
                             </div>
                          )}
@@ -242,7 +244,7 @@ const MessagesPage = () => {
         }
         
         setLoading(true);
-        const chatsRef = query(ref(rtdb, 'chats'), orderByChild(`members/${user.uid}`), equalTo(true)); // Use rtdb
+        const chatsRef = query(ref(rtdb, 'chats'), orderByChild(`members/${user.uid}`), equalTo(true));
 
         const unsubscribe = onValue(chatsRef, (snapshot) => {
             const allChats = snapshot.val() || {};
@@ -258,7 +260,7 @@ const MessagesPage = () => {
     }, [user]);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 h-[calc(100vh-10rem)] animate-fade-in">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 h-[calc(100vh-10rem)] p-4 animate-fade-in">
             <div className="md:col-span-1 lg:col-span-1 bg-surface-container p-2 rounded-2xl overflow-y-auto space-y-2">
                 <h2 className="text-xl font-bold text-on-surface p-3">Conversaciones</h2>
                 {loading && <div className="p-3 text-center text-on-surface-variant">Cargando chats...</div>}

@@ -12,7 +12,8 @@ const useAuth = () => {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        setUser({ ...currentUser });
+        // Correctly set the user object. Do not spread it.
+        setUser(currentUser);
 
         const favoritesRef = dbRef(rtdb, `users/${currentUser.uid}/favorites`);
         const unsubscribeFavorites = onValue(favoritesRef, (snapshot) => {
@@ -41,7 +42,8 @@ const useAuth = () => {
     if (currentUser) {
       try {
         await currentUser.reload();
-        setUser({ ...auth.currentUser });
+        // Also correct the user object here after reload
+        setUser(auth.currentUser);
       } catch (error) {
         console.error("Error reloading user data:", error);
       }

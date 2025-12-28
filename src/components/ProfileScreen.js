@@ -2,24 +2,32 @@ import React, { useState } from 'react';
 import useAuth from '../hooks/useAuth.js';
 import { useNavigate } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';
-import HangerIcon from '@mui/icons-material/Checkroom'; // Using Checkroom for hanger
+import HangerIcon from '@mui/icons-material/Checkroom';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { motion } from 'framer-motion';
 
-// Import the real data components we already fixed
+// Import the real data components
 import MyItemsPage from './MyItemsPage.js';
 import MyFavoritesPage from './MyFavoritesPage.js';
 import MyRentalsPage from './MyRentalsPage.js';
 
 // --- Reusable Components ---
 const ProfileHeader = ({ user, onLogout }) => {
-    const navigate = useNavigate();
+    // ... (same as before)
     return (
         <header className="relative flex justify-center items-center flex-col w-full text-center p-6 bg-surface-container-lowest">
-            <button onClick={onLogout} className="absolute top-4 right-4 p-2 rounded-full hover:bg-on-surface/10 transition-colors" aria-label="Cerrar sesión">
-                <span className="material-icons">logout</span>
-            </button>
+            <motion.button 
+                onClick={onLogout} 
+                className="absolute top-4 right-4 p-2 rounded-full text-error" 
+                aria-label="Cerrar sesión"
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            >
+                <LogoutIcon />
+            </motion.button>
             <div className="relative w-28 h-28">
                 <img 
                     src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.displayName || 'U'}&background=random`}
@@ -36,52 +44,53 @@ const ProfileHeader = ({ user, onLogout }) => {
 };
 
 const ProfileTabs = ({ activeTab, setActiveTab }) => {
-    const iconVariants = {
-        inactive: {
-            scale: 1,
-            rotate: 0
-        },
-        active: {
-            scale: 1.2,
-            rotate: [0, -10, 10, -10, 10, 0],
-            transition: {
-                duration: 0.5
-            }
-        }
-    };
+    // ... (same as before)
+    const tabIconProps = (tabName) => ({
+        onClick: () => setActiveTab(tabName),
+        color: activeTab === tabName ? 'primary' : 'default',
+        "aria-label": tabName,
+    });
 
     return (
         <nav className="w-full border-b border-outline/20 flex justify-around sticky top-0 bg-surface z-10">
-            <motion.div
-                animate={activeTab === 'wardrobe' ? 'active' : 'inactive'}
-                variants={iconVariants}
-            >
-                <IconButton onClick={() => setActiveTab('wardrobe')} color={activeTab === 'wardrobe' ? 'primary' : 'default'} aria-label="inventory_2">
-                    <HangerIcon />
-                </IconButton>
+            <motion.div whileHover={{ y: -4, transition: { type: 'spring', stiffness: 300 } }}>
+                <motion.div
+                    animate={{ rotate: activeTab === 'wardrobe' ? [0, -10, 10, -5, 5, 0] : 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <IconButton {...tabIconProps('wardrobe')}>
+                        <HangerIcon />
+                    </IconButton>
+                </motion.div>
             </motion.div>
-            <motion.div
-                animate={activeTab === 'favorites' ? 'active' : 'inactive'}
-                variants={iconVariants}
-            >
-                <IconButton onClick={() => setActiveTab('favorites')} color={activeTab === 'favorites' ? 'primary' : 'default'} aria-label="favorite">
-                    <FavoriteIcon />
-                </IconButton>
+            
+            <motion.div whileHover={{ y: -4, transition: { type: 'spring', stiffness: 300 } }}>
+                 <motion.div
+                    animate={{ scale: activeTab === 'favorites' ? [1, 1.2, 1, 1.1, 1] : 1 }}
+                    transition={{ duration: 0.4 }}
+                >
+                    <IconButton {...tabIconProps('favorites')}>
+                        <FavoriteIcon />
+                    </IconButton>
+                </motion.div>
             </motion.div>
-            <motion.div
-                animate={activeTab === 'orders' ? 'active' : 'inactive'}
-                variants={iconVariants}
-            >
-                <IconButton onClick={() => setActiveTab('orders')} color={activeTab === 'orders' ? 'primary' : 'default'} aria-label="local_shipping">
-                    <LocalShippingIcon />
-                </IconButton>
+
+            <motion.div whileHover={{ y: -4, transition: { type: 'spring', stiffness: 300 } }}>
+                <motion.div
+                    animate={{ x: activeTab === 'orders' ? [0, -3, 3, -2, 2, 0] : 0 }}
+                    transition={{ duration: 0.5, repeat: 0 }}
+                >
+                    <IconButton {...tabIconProps('orders')}>
+                        <LocalShippingIcon />
+                    </IconButton>
+                </motion.div>
             </motion.div>
         </nav>
     );
 };
 
 
-// --- Main Profile Screen Component (Now a Container) ---
+// --- Main Profile Screen Component ---
 
 const ProfileScreen = ({ favorites, onToggleFavorite, onSuitSelect }) => {
   const { user, loading: authLoading, logout } = useAuth();
@@ -93,17 +102,20 @@ const ProfileScreen = ({ favorites, onToggleFavorite, onSuitSelect }) => {
       navigate('/');
   };
 
+  const handleAddSuitClick = () => {
+      navigate('/add-suit');
+  }
+
   const renderTabContent = () => {
       switch(activeTab) {
           case 'wardrobe':
-              return <MyItemsPage />;
+              return <MyItemsPage onAddSuitClick={handleAddSuitClick} onSuitSelect={onSuitSelect} />;
           case 'favorites':
-              // MyFavoritesPage needs the list of favorite IDs and the toggle function
               return <MyFavoritesPage favorites={favorites} onToggleFavorite={onToggleFavorite} onSuitSelect={onSuitSelect} />;
           case 'orders':
               return <MyRentalsPage />;
           default:
-              return <MyItemsPage />;
+              return <MyItemsPage onAddSuitClick={handleAddSuitClick} onSuitSelect={onSuitSelect} />;
       }
   }
 
@@ -112,7 +124,6 @@ const ProfileScreen = ({ favorites, onToggleFavorite, onSuitSelect }) => {
   }
 
   if (!user) {
-      // This should ideally not happen if routes are protected, but as a fallback:
       navigate('/login');
       return null; 
   }

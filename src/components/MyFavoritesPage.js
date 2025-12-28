@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import useRealtimeDB from '../hooks/useRealtimeDB.js';
-import SuitCard, { SuitCardSkeleton } from './SuitCard.js';
+import SuitCard from './SuitCard.js'; // CORRECTED IMPORT
 import useSuitAnimations from '../hooks/useSuitAnimations.js';
 
 const MyFavoritesPage = ({ favorites, onSuitSelect, onToggleFavorite }) => {
@@ -18,7 +18,7 @@ const MyFavoritesPage = ({ favorites, onSuitSelect, onToggleFavorite }) => {
     if (loading) {
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[...Array(3)].map((_, index) => <SuitCardSkeleton key={index} />)}
+          {[...Array(3)].map((_, index) => <SuitCard.Skeleton key={index} />) /* CORRECTED USAGE */}
         </div>
       );
     }

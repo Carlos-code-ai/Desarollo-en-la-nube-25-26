@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import useRealtimeDB from '../hooks/useRealtimeDB.js';
-import useDebounce from '../hooks/useDebounce';
+import useDebounce from '../hooks/useDebounce.js';
 import { Link } from 'react-router-dom';
 
 const SearchIcon = () => (

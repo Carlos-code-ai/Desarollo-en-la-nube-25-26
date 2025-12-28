@@ -53,10 +53,6 @@ const MyFavoritesPage = ({ favorites, onSuitSelect, onToggleFavorite }) => {
 
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col space-y-8 px-4 sm:px-6 lg:px-8 py-8">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight text-on-background">Mis Favoritos</h1>
-        <p className="mt-1 text-lg text-on-surface-variant">Los trajes que más te han gustado, todos en un mismo lugar.</p>
-      </header>
       <div className="min-h-[400px]">
         {renderContent()}
       </div>

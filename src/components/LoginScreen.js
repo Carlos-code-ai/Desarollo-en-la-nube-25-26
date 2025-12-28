@@ -7,13 +7,10 @@ const VideoBackground = () => {
     const videos = [
         "/Aspiracional_un_hombre_1080p_202512241651.mp4",
         "/Primer_plano_elegante_1080p_202512241650.mp4",
-        "/Aspiracional_un_hombre_1080p_202512241652.mp4",
-        "/Visual_un_primer_1080p_202512241701.mp4",
-        "/Visual_un_primer_1080p_202512241703.mp4",
-        "/Visual_una_toma_1080p_202512241659.mp4"
+        "/Visual_un_primer_1080p_202512241703.mp4"
     ];
 
-    const videoRefs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
+    const videoRefs = [useRef(null), useRef(null), useRef(null)];
 
     useEffect(() => {
         const players = videoRefs.map(ref => ref.current);

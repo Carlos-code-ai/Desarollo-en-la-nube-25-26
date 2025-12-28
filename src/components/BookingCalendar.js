@@ -2,9 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-// Import Realtime Database functions and correct db import
+// Import Realtime Database functions and correct rtdb import
 import { ref, onValue, push, serverTimestamp } from 'firebase/database';
-import { db } from '../firebase.js';
+import { rtdb } from '../firebase.js'; // Use rtdb
 import { format } from 'date-fns';
 import useAuth from '../hooks/useAuth.js';
 import { useGSAP } from '@gsap/react';
@@ -38,7 +38,7 @@ const BookingCalendar = ({ suitId }) => {
         try {
             setLoading(true);
             // Use Realtime Database ref and onValue
-            const bookingsRef = ref(db, `suits/${suitId}/reservations`);
+            const bookingsRef = ref(rtdb, `suits/${suitId}/reservations`); // Use rtdb
             const unsubscribe = onValue(bookingsRef, (snapshot) => {
                 const dates = [];
                 const bookings = snapshot.val();
@@ -77,7 +77,7 @@ const BookingCalendar = ({ suitId }) => {
     setIsBooking(true);
     try {
       // Use Realtime Database ref and push
-      const bookingsRef = ref(db, `suits/${suitId}/reservations`);
+      const bookingsRef = ref(rtdb, `suits/${suitId}/reservations`); // Use rtdb
       await push(bookingsRef, {
         userId: user.uid,
         userEmail: user.email,

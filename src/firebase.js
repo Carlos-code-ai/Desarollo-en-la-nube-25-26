@@ -1,7 +1,8 @@
 
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getDatabase } from "firebase/database"; // Use Realtime Database
+import { getFirestore } from "firebase/firestore";
+import { getDatabase } from "firebase/database";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -19,7 +20,7 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize and export Firebase services
 export const auth = getAuth(app);
-// IMPORTANT: Initialize Realtime Database and export it as 'db'
-export const db = getDatabase(app); 
+export const db = getFirestore(app); // For Firestore
+export const rtdb = getDatabase(app); // For Realtime Database
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();

@@ -1,39 +1,74 @@
-import { useState, useEffect } from 'react';
-import { ref, onValue } from 'firebase/database';
-import { db } from '../firebase.js'; // Corrected import
 
-const useDatabase = (path) => {
-  const [data, setData] = useState(null);
+import { useState, useEffect } from 'react';
+import { rtdb } from '../firebase.js';
+import { ref, query, onValue, orderByChild, equalTo } from 'firebase/database';
+
+const useDatabase = (path, filterKey = null, filterValue = null) => {
+  const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const dbRef = ref(db, path);
+    setLoading(true);
+    setError(null);
 
-    const unsubscribe = onValue(dbRef, (snapshot) => {
+    let dbQuery = ref(rtdb, path);
+
+    if (filterKey && filterValue) {
+      dbQuery = query(ref(rtdb, path), orderByChild(filterKey), equalTo(filterValue));
+    } else if (filterKey && !filterValue) {
+      setDocs([]);
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = onValue(dbQuery, (snapshot) => {
       try {
         const val = snapshot.val();
         if (val) {
-          const dataArray = Object.keys(val).map(key => ({ ...val[key], id: key }));
-          setData(dataArray);
+          const dataArray = Object.keys(val).map(key => {
+            const item = val[key];
+            
+            // --- DEFINITIVE FIX --- 
+            // Firebase can return array-like objects. We must sanitize this at the source.
+            let images = [];
+            if (item.imageUrls) {
+                if (Array.isArray(item.imageUrls)) {
+                    images = item.imageUrls; // It's already a perfect array
+                } else if (typeof item.imageUrls === 'object' && item.imageUrls !== null) {
+                    images = Object.values(item.imageUrls); // Convert the object's values to a real array
+                }
+            } else if (item.imageUrl) {
+                // Handle legacy items that only have one imageUrl
+                images = [item.imageUrl];
+            }
+
+            return {
+                ...item,
+                id: key,
+                imageUrls: images, // Overwrite with the sanitized, real array
+            };
+          });
+          setDocs(dataArray.reverse());
         } else {
-          setData([]);
+          setDocs([]);
         }
       } catch (err) {
         setError(err);
-        console.error("Error processing data: ", err);
+        console.error("Error processing data from RealtimeDB: ", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }, (err) => {
       setError(err);
       setLoading(false);
-      console.error("Error fetching data: ", err);
+      console.error("Error fetching data from RealtimeDB: ", err);
     });
 
     return () => unsubscribe();
-  }, [path, Date.now()]);
+  }, [path, filterKey, filterValue]);
 
-  return { data, loading, error };
+  return { docs, loading, error };
 };
 
 export default useDatabase;

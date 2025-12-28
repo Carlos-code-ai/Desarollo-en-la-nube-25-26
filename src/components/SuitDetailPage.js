@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { db } from '../firebase.js';
+import { rtdb } from '../firebase.js'; // Use rtdb
 import { ref, onValue, push, query, orderByChild, equalTo, get, serverTimestamp, update } from 'firebase/database';
 import useAuth from '../hooks/useAuth.js';
 import { DayPicker } from 'react-day-picker';
@@ -74,7 +75,7 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
   const [totalPrice, setTotalPrice] = useState(0);
 
   useEffect(() => {
-    const suitRef = ref(db, `trajes/${suitId}`);
+    const suitRef = ref(rtdb, `trajes/${suitId}`); // Use rtdb
     setLoading(true);
 
     const unsubscribeSuit = onValue(suitRef, (snapshot) => {
@@ -83,7 +84,7 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
         const fullSuitData = { ...data, id: suitId };
         setSuit(fullSuitData);
 
-        const ownerRef = ref(db, `users/${data.ownerId}`);
+        const ownerRef = ref(rtdb, `users/${data.ownerId}`); // Use rtdb
         onValue(ownerRef, (ownerSnapshot) => {
             const ownerData = ownerSnapshot.val();
             if (ownerData) {
@@ -104,7 +105,7 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
       setLoading(false);
     });
 
-    const bookingsRef = query(ref(db, 'bookings'), orderByChild('suitId'), equalTo(suitId));
+    const bookingsRef = query(ref(rtdb, 'bookings'), orderByChild('suitId'), equalTo(suitId)); // Use rtdb
     const unsubscribeBookings = onValue(bookingsRef, (snapshot) => {
         const bookingsData = [];
         snapshot.forEach(childSnapshot => {
@@ -150,7 +151,7 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
         const ownerId = suit.ownerId;
         const renterId = user.uid;
 
-        const chatsRef = ref(db, 'chats');
+        const chatsRef = ref(rtdb, 'chats'); // Use rtdb
         const q = query(chatsRef, orderByChild('suitId'), equalTo(suitId));
         const snapshot = await get(q);
         let existingChatId = null;
@@ -165,9 +166,9 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
             }
         }
 
-        const rootRef = ref(db);
+        const rootRef = ref(rtdb); // Use rtdb
         const updates = {};
-        const newBookingRef = push(ref(db, 'bookings'));
+        const newBookingRef = push(ref(rtdb, 'bookings')); // Use rtdb
         let chatIdToNavigate = existingChatId;
 
         if (!existingChatId) {

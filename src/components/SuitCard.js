@@ -30,11 +30,13 @@ const HeartIcon = ({ isFavorite, onToggle }) => {
         }
     }, [isFavorite]);
 
-    // Stop propagation to prevent card click when favoriting
+    // Stop propagation to prevent card click when favoriting and check if onToggle exists
     const handleToggle = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        onToggle();
+        if (onToggle) {
+            onToggle();
+        }
     };
 
     return (
@@ -50,10 +52,16 @@ const HeartIcon = ({ isFavorite, onToggle }) => {
 
 
 // --- SuitCard Component ---
-const SuitCard = ({ suit, isFavorite, onToggleFavorite }) => {
+const SuitCard = ({ suit, isFavorite, onToggleFavorite, onSelect }) => {
     const { id, name, price, size, imageUrl, availability } = suit;
     const isRented = availability && availability.includes('rented');
     const cardRef = useRef(null);
+
+    const handleCardClick = () => {
+        if (onSelect) {
+            onSelect(id);
+        }
+    };
 
     // GSAP animation for hover effect
     const handleMouseEnter = () => {
@@ -65,11 +73,11 @@ const SuitCard = ({ suit, isFavorite, onToggleFavorite }) => {
     };
 
     return (
-        <Link 
-            to={`/suit/${id}`}
+        <div 
+            onClick={handleCardClick}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className="block w-full rounded-2xl overflow-hidden shadow-lg bg-surface-container-high transition-transform duration-300 ease-in-out"
+            className="block w-full rounded-2xl overflow-hidden shadow-lg bg-surface-container-high transition-transform duration-300 ease-in-out cursor-pointer"
             style={{ willChange: 'transform' }}
         >
             <div ref={cardRef} className="relative flex flex-col h-full">
@@ -78,7 +86,7 @@ const SuitCard = ({ suit, isFavorite, onToggleFavorite }) => {
                     <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                     {isRented && <div className="absolute top-3 left-3 bg-error text-on-error px-2.5 py-1 text-xs font-bold rounded-full z-10">ALQUILADO</div>}
-                    <HeartIcon isFavorite={isFavorite} onToggle={() => onToggleFavorite(id)} />
+                    <HeartIcon isFavorite={isFavorite} onToggle={onToggleFavorite ? () => onToggleFavorite(id) : null} />
                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                         <div className="flex justify-between items-end">
                             <div>
@@ -90,7 +98,7 @@ const SuitCard = ({ suit, isFavorite, onToggleFavorite }) => {
                     </div>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 };
 

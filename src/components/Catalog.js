@@ -1,13 +1,13 @@
 
 import React, { useState, useMemo } from 'react';
-import useRealtimeDB from '../hooks/useRealtimeDB.js';
+import { suitsData } from '../localData.js'; // <--- Importando datos locales
 import useSuitAnimations from '../hooks/useSuitAnimations.js';
 import SuitCard, { SuitCardSkeleton } from './SuitCard.js';
 
 const SortDropdown = ({ sortOption, setSortOption }) => {
     const [isOpen, setIsOpen] = useState(false);
     const options = {
-        newest: 'Novedades',
+        default: 'Recomendados',
         priceAsc: 'Precio: Menor a Mayor',
         priceDesc: 'Precio: Mayor a Menor',
     };
@@ -50,9 +50,17 @@ const SortDropdown = ({ sortOption, setSortOption }) => {
 }
 
 const Catalog = ({ onSuitSelect }) => {
-  const { docs: suits, loading, error } = useRealtimeDB('trajes');
+  // --- ANTES ---
+  // const { docs: suits, loading, error } = useRealtimeDB('trajes');
+  
+  // --- AHORA ---
+  const suits = suitsData; 
+  const loading = false;
+  const error = null;
+  // -------------
+
   const { containerRef } = useSuitAnimations();
-  const [sortOption, setSortOption] = useState('newest');
+  const [sortOption, setSortOption] = useState('default');
 
   const sortedSuits = useMemo(() => {
     let sorted = [...suits];
@@ -63,9 +71,9 @@ const Catalog = ({ onSuitSelect }) => {
       case 'priceDesc':
         sorted.sort((a, b) => b.price - a.price);
         break;
-      case 'newest':
+      case 'default':
       default:
-        sorted.sort((a, b) => b.createdAt - a.createdAt);
+        // No hacer nada, usar el orden por defecto del archivo
         break;
     }
     return sorted;

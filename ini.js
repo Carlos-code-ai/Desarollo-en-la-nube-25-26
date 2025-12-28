@@ -1,79 +1,95 @@
 
-import { db } from './src/firebase.js';
+import { rtdb } from './src/firebase.js';
 import { ref, set, goOffline } from 'firebase/database';
+
+// ==========================================================================================
+// CORRECTED DATA STRUCTURE
+//
+// This script now uses the data schema expected by the React components:
+// - `name`, `description`, `size`, `price`, `ownerId`, etc.
+// - `imageUrls` is now correctly formatted as an Array of strings.
+//
+// Running this script will reset the database to a clean, consistent state,
+// resolving the "t.map is not a function" error at its source.
+// ==========================================================================================
+
+const ownerId = 'default-owner-id'; // Placeholder owner ID
 
 const initialData = {
   trajes: {
     traje1: {
-      nombre: 'Classic Charcoal Suit',
-      descripcion: 'A classic suit for all occasions.',
-      talla: 'M',
-      color: 'Charcoal',
-      precioPorDia: 50,
-      imagenes: 'https://via.placeholder.com/300x400.png/333333/FFFFFF?text=Suit+1',
-      disponibilidad: 'Disponible'
+      name: 'Classic Charcoal Suit',
+      description: 'A timeless charcoal suit, perfect for business meetings or formal events. Made from 100% premium wool.',
+      size: 'M',
+      colors: 'Charcoal',
+      price: 50,
+      imageUrls: [
+        'https://via.placeholder.com/600x800.png/333333/FFFFFF?text=Suit+Front',
+        'https://via.placeholder.com/600x800.png/444444/FFFFFF?text=Suit+Back',
+        'https://via.placeholder.com/600x800.png/555555/FFFFFF?text=Detail',
+      ],
+      availability: 'Available',
+      ownerId: ownerId,
+      condition: 'New',
+      eventType: 'Formal',
     },
     traje2: {
-        nombre: 'Modern Navy Suit',
-        descripcion: 'A modern and stylish navy suit.',
-        talla: 'L',
-        color: 'Navy',
-        precioPorDia: 65,
-        imagenes: 'https://via.placeholder.com/300x400.png/002147/FFFFFF?text=Suit+2',
-        disponibilidad: 'Rented'
+      name: 'Modern Navy Blue Suit',
+      description: 'A stylish and modern navy blue suit with a slim fit. Ideal for weddings and cocktail parties.',
+      size: 'L',
+      colors: 'Navy Blue',
+      price: 65,
+      imageUrls: [
+        'https://via.placeholder.com/600x800.png/002147/FFFFFF?text=Navy+Suit',
+      ],
+      availability: 'Rented',
+      ownerId: ownerId,
+      condition: 'Used',
+      eventType: 'Wedding',
     },
     traje3: {
-        nombre: 'Elegant Black Tuxedo',
-        descripcion: 'An elegant black tuxedo for formal events.',
-        talla: 'S',
-        color: 'Black',
-        precioPorDia: 80,
-        imagenes: 'https://via.placeholder.com/300x400.png/333333/FFFFFF?text=Suit+3',
-        disponibilidad: 'Available'
+      name: 'Elegant Black Tuxedo',
+      description: 'An elegant black tuxedo for the most formal events. Features satin lapels and a classic design.',
+      size: 'S',
+      colors: 'Black',
+      price: 80,
+      imageUrls: [
+        'https://via.placeholder.com/600x800.png/000000/FFFFFF?text=Tuxedo+Front',
+        'https://via.placeholder.com/600x800.png/111111/FFFFFF?text=Tuxedo+Detail',
+      ],
+      availability: 'Available',
+      ownerId: ownerId,
+      condition: 'Like New',
+      eventType: 'Gala',
     }
   },
-  perfiles: {
-    perfil1: {
-      nombre: 'John Doe',
-      email: 'john.doe@example.com',
-      rol: 'cliente'
+  users: {
+    'default-owner-id': {
+        displayName: 'The Suit Owner',
+        email: 'owner@example.com',
+        photoURL: 'https://via.placeholder.com/150/000000/FFFFFF?text=Owner',
     },
-    perfil2: {
-        nombre: 'Jane Smith',
-        email: 'jane.smith@example.com',
-        rol: 'cliente'
-    }
   },
-  reportes: {
-    reporte1: {
-      razon: 'Daños en el traje',
-      descripcion: 'El traje tiene una mancha que no estaba.',
-      reportador: 'perfil2',
-      trajeReportado: 'traje1',
-      estado: 'pendiente'
-    }
-  },
-  reservas: {
-      reserva1: {
-          trajeId: 'traje1',
-          clienteId: 'perfil1',
-          fechaInicio: '2024-06-01',
-          fechaFin: '2024-06-03',
-          estado: 'confirmada'
-      }
-  }
+  // Other collections can be added here if needed
 };
 
-const dbRef = ref(db);
+// We get a reference to the root of the database.
+const dbRef = ref(rtdb);
 
-console.log("Initializing database...");
+console.log("Initializing database with CORRECTED data structure...");
 
+// We use `set` to completely overwrite all data at the root reference.
 set(dbRef, initialData)
   .then(() => {
     console.log("Database initialized successfully!");
-    goOffline(db);
+    console.log("The data structure is now clean and consistent.");
+    console.log("Please restart your React application (`npm start`) to see the changes.");
+    // goOffline disconnects from the database, useful for scripts.
+    goOffline(rtdb);
   })
   .catch((error) => {
     console.error("Error initializing database:", error);
-    goOffline(db);
+    // Also disconnect on error.
+    goOffline(rtdb);
   });
+

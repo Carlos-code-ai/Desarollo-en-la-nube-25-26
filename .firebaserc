@@ -1,5 +1,9 @@
 {
   "projects": {
-    "default": "ready2wear-b5f09"
-  }
+    "default": "ready2wear-b5f09",
+    "ready2Wear": "ready2wear-b5f09",
+    "Ready2Wear": "desarollogit-68916509-89c54"
+  },
+  "targets": {},
+  "etags": {}
 }

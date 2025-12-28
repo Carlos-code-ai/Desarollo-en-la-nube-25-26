@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { db } from '../firebase.js';
+import { rtdb } from '../firebase.js'; // Use rtdb
 import { ref, onValue, push, update, serverTimestamp, query, orderByChild, equalTo, increment } from 'firebase/database';
 import useAuth from '../hooks/useAuth.js';
 import { format } from 'date-fns';
@@ -71,10 +72,10 @@ const ChatView = ({ chatId }) => {
 
     useEffect(() => {
         setLoading(true);
-        const chatRef = ref(db, `chats/${chatId}`);
+        const chatRef = ref(rtdb, `chats/${chatId}`);
 
         if (user?.uid) {
-            const unreadCountRef = ref(db, `chats/${chatId}/unreadCount`);
+            const unreadCountRef = ref(rtdb, `chats/${chatId}/unreadCount`);
             update(unreadCountRef, { [user.uid]: 0 }).catch(err => console.error("Failed to reset unread count", err));
         }
 
@@ -83,7 +84,7 @@ const ChatView = ({ chatId }) => {
             setChatInfo(chatData);
 
             if (chatData && chatData.bookingId) {
-                const bookingRef = ref(db, `bookings/${chatData.bookingId}`);
+                const bookingRef = ref(rtdb, `bookings/${chatData.bookingId}`);
                 onValue(bookingRef, (bookingSnapshot) => {
                     setBooking(bookingSnapshot.val());
                 });
@@ -91,7 +92,7 @@ const ChatView = ({ chatId }) => {
             setLoading(false);
         }, () => setLoading(false));
 
-        const messagesRef = query(ref(db, `messages/${chatId}`), orderByChild('timestamp'));
+        const messagesRef = query(ref(rtdb, `messages/${chatId}`), orderByChild('timestamp'));
         const unsubscribeMessages = onValue(messagesRef, (snapshot) => {
             const msgs = [];
             snapshot.forEach(childSnapshot => { msgs.push({ id: childSnapshot.key, ...childSnapshot.val() }); });
@@ -123,9 +124,9 @@ const ChatView = ({ chatId }) => {
             isSystem: !!systemMessage
         };
 
-        const rootRef = ref(db);
+        const rootRef = ref(rtdb);
         const updates = {};
-        const newMessageKey = push(ref(db, `messages/${chatId}`)).key;
+        const newMessageKey = push(ref(rtdb, `messages/${chatId}`)).key;
 
         updates[`/messages/${chatId}/${newMessageKey}`] = messageData;
         updates[`/chats/${chatId}/lastMessage`] = messageText;
@@ -142,7 +143,7 @@ const ChatView = ({ chatId }) => {
 
     const handleUpdateBookingStatus = async (newStatus) => {
         if (!booking) return;
-        const bookingRef = ref(db, `bookings/${booking.id}`);
+        const bookingRef = ref(rtdb, `bookings/${booking.id}`);
         try {
             await update(bookingRef, { status: newStatus });
             const systemMessage = `La solicitud de alquiler ha sido ${newStatus === 'accepted' ? 'aceptada' : 'rechazada'}.`;
@@ -241,7 +242,7 @@ const MessagesPage = () => {
         }
         
         setLoading(true);
-        const chatsRef = query(ref(db, 'chats'), orderByChild(`members/${user.uid}`), equalTo(true));
+        const chatsRef = query(ref(rtdb, 'chats'), orderByChild(`members/${user.uid}`), equalTo(true)); // Use rtdb
 
         const unsubscribe = onValue(chatsRef, (snapshot) => {
             const allChats = snapshot.val() || {};

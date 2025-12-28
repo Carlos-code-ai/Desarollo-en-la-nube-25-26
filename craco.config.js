@@ -10,4 +10,15 @@ module.exports = {
       return middlewares;
     },
   },
+  babel: {
+    presets: [
+      '@babel/preset-env',
+      // Explicitly set the modern, automatic JSX runtime
+      ['@babel/preset-react', { runtime: 'automatic' }]
+    ],
+    loaderOptions: (babelLoaderOptions) => {
+      babelLoaderOptions.sourceType = "unambiguous";
+      return babelLoaderOptions;
+    }
+  },
 };

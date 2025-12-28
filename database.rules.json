@@ -16,22 +16,19 @@
     },
     "bookings": {
       ".read": "auth != null && (data.child('ownerId').val() === auth.uid || data.child('renterId').val() === auth.uid)",
-      ".indexOn": ["suitId", "renterId", "ownerId"], // ÍNDICES CORRECTOS
+      ".indexOn": ["suitId", "renterId", "ownerId"], 
       "$bookingId": {
         ".write": "auth != null",
         ".validate": "newData.hasChildren(['suitId', 'suitName', 'suitImageUrl', 'ownerId', 'renterId', 'renterName', 'renterPhotoURL', 'startDate', 'endDate', 'totalPrice', 'status', 'createdAt'])"
       }
     },
     "chats": {
-       // La consulta por suitId para ver si existe un chat
-      ".indexOn": ["suitId", "timestamp"],
+       ".indexOn": ["suitId", "timestamp", "members"],
       "$chatId": {
-        // Solo los miembros del chat pueden leer o escribir
         ".read": "auth != null && data.child('members').child(auth.uid).exists()",
         ".write": "auth != null && data.child('members').child(auth.uid).exists()",
         ".validate": "newData.hasChildren(['id', 'suitId', 'lastMessage', 'timestamp', 'members', 'participantInfo'])",
         "members": {
-            // Índice para permitir la consulta principal de chats del usuario
            ".indexOn": ".value"
         }
       }

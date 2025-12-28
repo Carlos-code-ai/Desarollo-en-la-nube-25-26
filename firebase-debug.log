@@ -1,0 +1,221 @@
+[debug] [2025-12-27T20:55:43.889Z] ----------------------------------------------------------------------
+[debug] [2025-12-27T20:55:43.891Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /nix/store/c776mhyhgykcld7p90ajrka149ifn61a-firebase-tools-14.26.0/lib/node_modules/firebase-tools/lib/bin/firebase.js deploy --debug
+[debug] [2025-12-27T20:55:43.891Z] CLI Version:   14.26.0
+[debug] [2025-12-27T20:55:43.891Z] Platform:      linux
+[debug] [2025-12-27T20:55:43.891Z] Node Version:  v20.19.1
+[debug] [2025-12-27T20:55:43.891Z] Time:          Sat Dec 27 2025 20:55:43 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-12-27T20:55:43.892Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-27T20:55:44.073Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T20:55:44.074Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T20:55:44.077Z] >>> [apiv2][query] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 [none]
+[debug] [2025-12-27T20:55:44.858Z] <<< [apiv2][status] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 200
+[debug] [2025-12-27T20:55:44.859Z] <<< [apiv2][body] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 {"workspaceId":"desarollogit-68916509","name":"Desarollo.git","workspaceRedirectUrl":"firebase-desarollogit-1763731860172.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-12-27T20:55:06.134515Z","workspaceTemplate":"WORKSPACE_TEMPLATE_FLUTTER","owner":"SELF","serviceAccountEmail":"msp-6919791273902117645@monospace-1.iam.gserviceaccount.com","gitRepoUrl":"https://github.com/Carlos-code-ai/Desarollo-en-la-nube-25-26.git","enableNix":true,"ownerEmail":"cllabresllovet@gmail.com","workstationAccessToken":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Nsb3VkLmdvb2dsZS5jb20vd29ya3N0YXRpb25zIiwiYXVkIjoiZmlyZWJhc2UtZGVzYXJvbGxvZ2l0LTE3NjM3MzE4NjAxNzIuY2x1c3Rlci1jYmVpaXRhN3JiZTdpdXdodmpzNXp3dzJpNC5jbG91ZHdvcmtzdGF0aW9ucy5kZXYiLCJpYXQiOjE3NjY4Njg5NDQsImV4cCI6MTc2Njk1NTM0NH0.Tabaj2JroVsKizF3nrMxnGZEhhujN2j2ksRS-O6FX5Sp0ShRmYwvHRgp-EEVDJO57rmDEoHILHjfL-At7e89AaX4CQSEo_TkrkH-UsVjZyFbR-1X5Cq7Sd3ptwls-c7YS-GwYnyxOpLQ9KvU_vc49Ka7Y7uQvQ7po6ZNoo8lzZXEtA0W-zTtODcMQcV3OugT-GyN2edj1IekhezkEHIY_Ct-xhCYdB5Qa7Zh4eMRdDNI_Fkjr70A1mscUOTpoA7tqyTNRzVy89C5ABLZJ2lj-Tn6R2inpM_euV368RZ-BzDk01ozx4yuQV_bg_IpKsEuJqqEURMRZEhg-DmbwXznEQ","firebaseProjectId":"desarollogit-68916509-89c54"}
+[debug] [2025-12-27T20:55:44.860Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-27T20:55:44.860Z] > authorizing via signed-in user (cllabresllovet@gmail.com)
+[debug] [2025-12-27T20:55:44.860Z] [iam] checking project desarollogit-68916509-89c54 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-27T20:55:44.861Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T20:55:44.861Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T20:55:44.861Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions [none]
+[debug] [2025-12-27T20:55:44.861Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions x-goog-quota-user=projects/desarollogit-68916509-89c54
+[debug] [2025-12-27T20:55:44.861Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-27T20:55:45.447Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions 200
+[debug] [2025-12-27T20:55:45.447Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-27T20:55:45.448Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T20:55:45.448Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T20:55:45.448Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 [none]
+[debug] [2025-12-27T20:55:45.655Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 200
+[debug] [2025-12-27T20:55:45.656Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 {"projectId":"desarollogit-68916509-89c54","projectNumber":"464708937070","displayName":"Firebase app","name":"projects/desarollogit-68916509-89c54","resources":{"hostingSite":"desarollogit-68916509-89c54","realtimeDatabaseInstance":"desarollogit-68916509-89c54-default-rtdb"},"state":"ACTIVE","etag":"1_7ea0b3dd-1b94-428e-a18c-6f477837e4ea"}
+[info] 
+[info] === Deploying to 'desarollogit-68916509-89c54'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-12-27T20:55:45.658Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T20:55:45.658Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T20:55:45.659Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions [none]
+[debug] [2025-12-27T20:55:45.659Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase--project-idx"}}
+[debug] [2025-12-27T20:55:46.364Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions 429
+[debug] [2025-12-27T20:55:46.364Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions {"error":{"code":429,"message":"You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.\n \nTip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings","status":"RESOURCE_EXHAUSTED"}}
+[error] 
+[error] Error: Request to https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions had HTTP Error: 429, You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.
+ 
+Tip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings
+[debug] [2025-12-27T20:55:46.366Z] Error Context: {
+  "body": {
+    "error": {
+      "code": 429,
+      "message": "You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.\n \nTip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings",
+      "status": "RESOURCE_EXHAUSTED"
+    }
+  },
+  "response": {
+    "statusCode": 429
+  }
+}
+[debug] [2025-12-27T21:30:18.876Z] ----------------------------------------------------------------------
+[debug] [2025-12-27T21:30:18.878Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /nix/store/c776mhyhgykcld7p90ajrka149ifn61a-firebase-tools-14.26.0/lib/node_modules/firebase-tools/lib/bin/firebase.js deploy --debug
+[debug] [2025-12-27T21:30:18.878Z] CLI Version:   14.26.0
+[debug] [2025-12-27T21:30:18.878Z] Platform:      linux
+[debug] [2025-12-27T21:30:18.878Z] Node Version:  v20.19.1
+[debug] [2025-12-27T21:30:18.878Z] Time:          Sat Dec 27 2025 21:30:18 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-12-27T21:30:18.879Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-27T21:30:19.063Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T21:30:19.064Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T21:30:19.067Z] >>> [apiv2][query] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 [none]
+[debug] [2025-12-27T21:30:20.498Z] <<< [apiv2][status] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 200
+[debug] [2025-12-27T21:30:20.498Z] <<< [apiv2][body] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 {"workspaceId":"desarollogit-68916509","name":"Desarollo.git","workspaceRedirectUrl":"firebase-desarollogit-1763731860172.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-12-27T21:18:47.988907Z","workspaceTemplate":"WORKSPACE_TEMPLATE_FLUTTER","owner":"SELF","serviceAccountEmail":"msp-6919791273902117645@monospace-1.iam.gserviceaccount.com","gitRepoUrl":"https://github.com/Carlos-code-ai/Desarollo-en-la-nube-25-26.git","enableNix":true,"ownerEmail":"cllabresllovet@gmail.com","workstationAccessToken":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Nsb3VkLmdvb2dsZS5jb20vd29ya3N0YXRpb25zIiwiYXVkIjoiZmlyZWJhc2UtZGVzYXJvbGxvZ2l0LTE3NjM3MzE4NjAxNzIuY2x1c3Rlci1jYmVpaXRhN3JiZTdpdXdodmpzNXp3dzJpNC5jbG91ZHdvcmtzdGF0aW9ucy5kZXYiLCJpYXQiOjE3NjY4NzEwMjAsImV4cCI6MTc2Njk1NzQyMH0.GS14zC5Ue28chinSyyKBoxPpN3ivoyGCRMJ6qW4TPLJpSReQ8vcWeB2NdJiX74rMsLyFeA4Y392wDdmnnzLwhQ3J2R0V0XNUhWDMFysq4GBMXc7tNRDF7_dItQoCUrf9nPbeab7ML3uHxCX7RB-59xtcyxBYnVyqIz6b7wkXcffJztfxPrHmcGzkjoxsrZGEunWTNRNpDy54G2mBycyIPLHYM_XjmboUiPc17FfhnkC1OEgFZHIShTrHAZGIK8-0di4tjVtP1iN4k92PxV7mZTklnkk-X6X491SnYpT7AFywxXm9STzVJYCHr-dqWX5RyqJqCM8ECOufWqFjFpPWQw","firebaseProjectId":"desarollogit-68916509-89c54"}
+[debug] [2025-12-27T21:30:20.499Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-27T21:30:20.500Z] > authorizing via signed-in user (cllabresllovet@gmail.com)
+[debug] [2025-12-27T21:30:20.500Z] [iam] checking project desarollogit-68916509-89c54 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-27T21:30:20.500Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T21:30:20.500Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T21:30:20.501Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions [none]
+[debug] [2025-12-27T21:30:20.501Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions x-goog-quota-user=projects/desarollogit-68916509-89c54
+[debug] [2025-12-27T21:30:20.501Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-27T21:30:21.086Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions 200
+[debug] [2025-12-27T21:30:21.086Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-27T21:30:21.087Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T21:30:21.087Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T21:30:21.087Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 [none]
+[debug] [2025-12-27T21:30:21.289Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 200
+[debug] [2025-12-27T21:30:21.289Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 {"projectId":"desarollogit-68916509-89c54","projectNumber":"464708937070","displayName":"Firebase app","name":"projects/desarollogit-68916509-89c54","resources":{"hostingSite":"desarollogit-68916509-89c54","realtimeDatabaseInstance":"desarollogit-68916509-89c54-default-rtdb"},"state":"ACTIVE","etag":"1_7ea0b3dd-1b94-428e-a18c-6f477837e4ea"}
+[info] 
+[info] === Deploying to 'desarollogit-68916509-89c54'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-12-27T21:30:21.292Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T21:30:21.292Z] Checked if tokens are valid: true, expires at: 1766872392033
+[debug] [2025-12-27T21:30:21.292Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions [none]
+[debug] [2025-12-27T21:30:21.292Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase--project-idx"}}
+[debug] [2025-12-27T21:30:21.983Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions 429
+[debug] [2025-12-27T21:30:21.983Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions {"error":{"code":429,"message":"You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.\n \nTip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings","status":"RESOURCE_EXHAUSTED"}}
+[error] 
+[error] Error: Request to https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions had HTTP Error: 429, You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.
+ 
+Tip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings
+[debug] [2025-12-27T21:30:21.985Z] Error Context: {
+  "body": {
+    "error": {
+      "code": 429,
+      "message": "You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.\n \nTip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings",
+      "status": "RESOURCE_EXHAUSTED"
+    }
+  },
+  "response": {
+    "statusCode": 429
+  }
+}
+[debug] [2025-12-28T01:46:30.227Z] ----------------------------------------------------------------------
+[debug] [2025-12-28T01:46:30.229Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /nix/store/c776mhyhgykcld7p90ajrka149ifn61a-firebase-tools-14.26.0/lib/node_modules/firebase-tools/lib/bin/firebase.js deploy --only hosting --debug
+[debug] [2025-12-28T01:46:30.229Z] CLI Version:   14.26.0
+[debug] [2025-12-28T01:46:30.229Z] Platform:      linux
+[debug] [2025-12-28T01:46:30.229Z] Node Version:  v20.19.1
+[debug] [2025-12-28T01:46:30.229Z] Time:          Sun Dec 28 2025 01:46:30 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-12-28T01:46:30.229Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-28T01:46:30.470Z] Checked if tokens are valid: false, expires at: 1766872392033
+[debug] [2025-12-28T01:46:30.471Z] Checked if tokens are valid: false, expires at: 1766872392033
+[debug] [2025-12-28T01:46:30.472Z] > refreshing access token with scopes: []
+[debug] [2025-12-28T01:46:30.473Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-12-28T01:46:30.474Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-28T01:46:30.534Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-12-28T01:46:30.535Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-12-28T01:46:30.542Z] >>> [apiv2][query] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 [none]
+[debug] [2025-12-28T01:46:31.972Z] <<< [apiv2][status] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 200
+[debug] [2025-12-28T01:46:31.972Z] <<< [apiv2][body] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 {"workspaceId":"desarollogit-68916509","name":"Desarollo.git","workspaceRedirectUrl":"firebase-desarollogit-1763731860172.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-12-28T01:40:41.721110Z","workspaceTemplate":"WORKSPACE_TEMPLATE_FLUTTER","owner":"SELF","serviceAccountEmail":"msp-6919791273902117645@monospace-1.iam.gserviceaccount.com","gitRepoUrl":"https://github.com/Carlos-code-ai/Desarollo-en-la-nube-25-26.git","enableNix":true,"ownerEmail":"cllabresllovet@gmail.com","workstationAccessToken":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Nsb3VkLmdvb2dsZS5jb20vd29ya3N0YXRpb25zIiwiYXVkIjoiZmlyZWJhc2UtZGVzYXJvbGxvZ2l0LTE3NjM3MzE4NjAxNzIuY2x1c3Rlci1jYmVpaXRhN3JiZTdpdXdodmpzNXp3dzJpNC5jbG91ZHdvcmtzdGF0aW9ucy5kZXYiLCJpYXQiOjE3NjY4ODYzOTEsImV4cCI6MTc2Njk3Mjc5MX0.UkGfFTI9V2r79QIuN4mhHOidq_8F7ipmozYIa1Yz9zHgR7L_EDwNxjxaVjHlcnbozacWtRPI9aNNrH3OsfN4FOfPYU4OxNaI6BASC3C8tLbVCyIF0mrwQ_3v8pkm4FF0kYjX_rJuBgH975G86PLT4yoAVBgMk8mW5Ua_teD1P9fZHaaTiCMR4f8JtutDVSuAlMUAd-LoaGEMIE5Eq7qN0muMgawztSxp-hJADSPwIQQzMBXXkLvBN9zQRk5z-3DLTK7_JpPMkBfgDFeS_irp8tRIXpOtuFHbPdtjEg1O4mNAMYG-ms2e8OtGnk3e2_pA8skM6x2ny01JbK998DStFw","firebaseProjectId":"desarollogit-68916509-89c54"}
+[debug] [2025-12-28T01:46:31.974Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-28T01:46:31.974Z] > authorizing via signed-in user (cllabresllovet@gmail.com)
+[debug] [2025-12-28T01:46:31.974Z] [iam] checking project desarollogit-68916509-89c54 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-28T01:46:31.975Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:46:31.975Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:46:31.975Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions [none]
+[debug] [2025-12-28T01:46:31.975Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions x-goog-quota-user=projects/desarollogit-68916509-89c54
+[debug] [2025-12-28T01:46:31.975Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-28T01:46:32.106Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions 200
+[debug] [2025-12-28T01:46:32.107Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-28T01:46:32.107Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:46:32.107Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:46:32.108Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 [none]
+[debug] [2025-12-28T01:46:32.313Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 200
+[debug] [2025-12-28T01:46:32.314Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 {"projectId":"desarollogit-68916509-89c54","projectNumber":"464708937070","displayName":"Firebase app","name":"projects/desarollogit-68916509-89c54","resources":{"hostingSite":"desarollogit-68916509-89c54","realtimeDatabaseInstance":"desarollogit-68916509-89c54-default-rtdb"},"state":"ACTIVE","etag":"1_7ea0b3dd-1b94-428e-a18c-6f477837e4ea"}
+[info] 
+[info] === Deploying to 'desarollogit-68916509-89c54'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-12-28T01:46:32.317Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:46:32.317Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:46:32.317Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions [none]
+[debug] [2025-12-28T01:46:32.317Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase--project-idx"}}
+[debug] [2025-12-28T01:46:33.017Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions 429
+[debug] [2025-12-28T01:46:33.017Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions {"error":{"code":429,"message":"You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.\n \nTip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings","status":"RESOURCE_EXHAUSTED"}}
+[error] 
+[error] Error: Request to https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions had HTTP Error: 429, You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.
+ 
+Tip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings
+[debug] [2025-12-28T01:46:33.018Z] Error Context: {
+  "body": {
+    "error": {
+      "code": 429,
+      "message": "You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.\n \nTip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings",
+      "status": "RESOURCE_EXHAUSTED"
+    }
+  },
+  "response": {
+    "statusCode": 429
+  }
+}
+[debug] [2025-12-28T01:49:02.032Z] ----------------------------------------------------------------------
+[debug] [2025-12-28T01:49:02.034Z] Command:       /nix/store/ws50yvm6vzlzf7jzz6n7xh4szddrack1-nodejs-20.19.1/bin/node /nix/store/c776mhyhgykcld7p90ajrka149ifn61a-firebase-tools-14.26.0/lib/node_modules/firebase-tools/lib/bin/firebase.js deploy --only hosting --debug
+[debug] [2025-12-28T01:49:02.034Z] CLI Version:   14.26.0
+[debug] [2025-12-28T01:49:02.035Z] Platform:      linux
+[debug] [2025-12-28T01:49:02.035Z] Node Version:  v20.19.1
+[debug] [2025-12-28T01:49:02.035Z] Time:          Sun Dec 28 2025 01:49:02 GMT+0000 (Coordinated Universal Time)
+[debug] [2025-12-28T01:49:02.035Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-12-28T01:49:02.235Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:49:02.236Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:49:02.238Z] >>> [apiv2][query] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 [none]
+[debug] [2025-12-28T01:49:03.043Z] <<< [apiv2][status] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 200
+[debug] [2025-12-28T01:49:03.043Z] <<< [apiv2][body] GET https://monospace-pa.googleapis.com/v1/workspaces/desarollogit-68916509 {"workspaceId":"desarollogit-68916509","name":"Desarollo.git","workspaceRedirectUrl":"firebase-desarollogit-1763731860172.cluster-cbeiita7rbe7iuwhvjs5zww2i4.cloudworkstations.dev","status":"WORKSPACE_STATUS_RUNNING","lastAccessDatetime":"2025-12-28T01:40:41.721110Z","workspaceTemplate":"WORKSPACE_TEMPLATE_FLUTTER","owner":"SELF","serviceAccountEmail":"msp-6919791273902117645@monospace-1.iam.gserviceaccount.com","gitRepoUrl":"https://github.com/Carlos-code-ai/Desarollo-en-la-nube-25-26.git","enableNix":true,"ownerEmail":"cllabresllovet@gmail.com","workstationAccessToken":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Nsb3VkLmdvb2dsZS5jb20vd29ya3N0YXRpb25zIiwiYXVkIjoiZmlyZWJhc2UtZGVzYXJvbGxvZ2l0LTE3NjM3MzE4NjAxNzIuY2x1c3Rlci1jYmVpaXRhN3JiZTdpdXdodmpzNXp3dzJpNC5jbG91ZHdvcmtzdGF0aW9ucy5kZXYiLCJpYXQiOjE3NjY4ODY1NDIsImV4cCI6MTc2Njk3Mjk0Mn0.KqWDEJXN0LrsTw4Ll1PMsn0zbn4Szksr-wgdY3JaOzfFXvqq_hGmlvbLljh0lb7XM8myaQ_CWcxCpRUxNV4MS9yd6zeFBJTEoC0F4YSMaZCc-wo3oE2iuf83ph4tNuhjSMSk7qwz4MY3OPKHkjl-8YyaFDGTizzmaXf9K_su2pMsPLO10jSDLM1CAd7nPRyEJ1kg8CXpDm63-wKoCMRHWctlo5INcmgQKATD1QIB8fDOzgIx7tZ7zE_-8mdHMH0XPI_1KIDTKnMtyY-JTt6iNN5o_Q3ZtSjC1tIq1o2PFhqYd5Tz7fRl6Eez_YVHvzrjS8r4zgDnHUSCvrhKibI8jg","firebaseProjectId":"desarollogit-68916509-89c54"}
+[debug] [2025-12-28T01:49:03.044Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform","https://www.googleapis.com/auth/userinfo.email"]
+[debug] [2025-12-28T01:49:03.045Z] > authorizing via signed-in user (cllabresllovet@gmail.com)
+[debug] [2025-12-28T01:49:03.045Z] [iam] checking project desarollogit-68916509-89c54 for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2025-12-28T01:49:03.045Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:49:03.046Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:49:03.046Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions [none]
+[debug] [2025-12-28T01:49:03.046Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions x-goog-quota-user=projects/desarollogit-68916509-89c54
+[debug] [2025-12-28T01:49:03.046Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-28T01:49:03.180Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions 200
+[debug] [2025-12-28T01:49:03.180Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/desarollogit-68916509-89c54:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2025-12-28T01:49:03.181Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:49:03.181Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:49:03.181Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 [none]
+[debug] [2025-12-28T01:49:03.386Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 200
+[debug] [2025-12-28T01:49:03.386Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/desarollogit-68916509-89c54 {"projectId":"desarollogit-68916509-89c54","projectNumber":"464708937070","displayName":"Firebase app","name":"projects/desarollogit-68916509-89c54","resources":{"hostingSite":"desarollogit-68916509-89c54","realtimeDatabaseInstance":"desarollogit-68916509-89c54-default-rtdb"},"state":"ACTIVE","etag":"1_7ea0b3dd-1b94-428e-a18c-6f477837e4ea"}
+[info] 
+[info] === Deploying to 'desarollogit-68916509-89c54'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2025-12-28T01:49:03.389Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:49:03.389Z] Checked if tokens are valid: true, expires at: 1766889989535
+[debug] [2025-12-28T01:49:03.390Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions [none]
+[debug] [2025-12-28T01:49:03.390Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase--project-idx"}}
+[debug] [2025-12-28T01:49:04.092Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions 429
+[debug] [2025-12-28T01:49:04.092Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions {"error":{"code":429,"message":"You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.\n \nTip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings","status":"RESOURCE_EXHAUSTED"}}
+[error] 
+[error] Error: Request to https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/desarollogit-68916509-89c54/versions had HTTP Error: 429, You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.
+ 
+Tip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings
+[debug] [2025-12-28T01:49:04.093Z] Error Context: {
+  "body": {
+    "error": {
+      "code": 429,
+      "message": "You have exceeded the Hosting storage quota for your Firebase project, so you cannot deploy to your site right now. Visit the Firebase console to either manage your Hosting storage or upgrade to the Blaze plan.\n \nTip: Manage your Hosting storage by setting the number of releases to keep for each channel so that older releases are automatically deleted. Learn more: https://firebase.google.com/docs/hosting/manage-releases#release-storage-settings",
+      "status": "RESOURCE_EXHAUSTED"
+    }
+  },
+  "response": {
+    "statusCode": 429
+  }
+}

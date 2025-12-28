@@ -30,7 +30,7 @@ const ModernSelect = ({ id, label, options, value, onChange }) => {
         gsap.to(placeholderRef.current, {
             y: isOpen || hasValue ? -24 : 0,
             scale: isOpen || hasValue ? 0.85 : 1,
-            color: isOpen ? '#A855F7' : '#9CA3AF',
+            color: isOpen ? '#3B82F6' : '#9CA3AF', // Changed from #A855F7 to #3B82F6 (blue-500)
             duration: 0.2,
             ease: 'power2.out',
         });

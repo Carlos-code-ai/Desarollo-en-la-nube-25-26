@@ -4,7 +4,7 @@ import useRealtimeDB from '../hooks/useRealtimeDB.js';
 import useSuitAnimations from '../hooks/useSuitAnimations.js';
 import SuitCard, { SuitCardSkeleton } from './SuitCard.js';
 import { gsap } from 'gsap';
-import { usePopper } from 'react-popper';
+import { useFloating, offset, flip, shift } from '@floating-ui/react';
 import FilterPanel from './FilterPanel.js';
 import SearchBar from './SearchBar.js'; // Importar SearchBar
 
@@ -35,24 +35,39 @@ const AnimatedFilterIcon = () => {
 const SortDropdown = ({ selected, onSelect }) => {
     const options = { 'default': 'Relevancia', 'price-asc': 'Precio: Menor a Mayor', 'price-desc': 'Precio: Mayor a Menor' };
     const [isOpen, setIsOpen] = useState(false);
-    const popperRef = useRef(null), dropdownRef = useRef(null);
-    const { styles, attributes } = usePopper(dropdownRef.current, popperRef.current, { placement: 'bottom-end', modifiers: [{ name: 'offset', options: { offset: [0, 8] } }] });
+    
+    const { refs, floatingStyles } = useFloating({
+        open: isOpen,
+        onOpenChange: setIsOpen,
+        placement: 'bottom-end',
+        middleware: [offset(8), flip(), shift()],
+    });
+
     useEffect(() => {
-        const handleClickOutside = (e) => { if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false); };
-        document.addEventListener('mousedown', handleClickOutside);
-        gsap.set(popperRef.current, { autoAlpha: 0, scale: 0.95 });
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-    useEffect(() => {
-        gsap.to(popperRef.current, { autoAlpha: isOpen ? 1 : 0, scale: isOpen ? 1 : 0.95, duration: 0.2, ease: 'power2.out' });
-    }, [isOpen]);
+        if (refs.floating.current) {
+            gsap.to(refs.floating.current, { 
+                autoAlpha: isOpen ? 1 : 0, 
+                scale: isOpen ? 1 : 0.95, 
+                duration: 0.2, 
+                ease: 'power2.out' 
+            });
+        }
+    }, [isOpen, refs.floating]);
+
     return (
-        <div className="relative" ref={dropdownRef}>
-            <button onClick={() => setIsOpen(true)} className="flex items-center justify-between w-full h-10 px-4 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary overflow-hidden">
+        <div className="relative">
+            <button 
+                ref={refs.setReference}
+                onClick={() => setIsOpen(!isOpen)} 
+                className="flex items-center justify-between w-full h-10 px-4 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-colors text-sm font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary overflow-hidden">
                 <span className="truncate pr-2">{options[selected]}</span>
                 <SortIcon className={`h-5 w-5 flex-shrink-0 text-on-surface-variant transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
-            <div ref={popperRef} style={styles.popper} {...attributes.popper} className="z-10 w-64 bg-surface-container-high rounded-xl shadow-lg border border-outline/30 overflow-hidden">
+            <div 
+                ref={refs.setFloating}
+                style={floatingStyles}
+                className="z-10 w-64 bg-surface-container-high rounded-xl shadow-lg border border-outline/30 overflow-hidden"
+            >
                  {Object.entries(options).map(([key, value]) => (
                     <button 
                         key={key} 

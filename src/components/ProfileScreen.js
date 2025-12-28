@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import useAuth from '../hooks/useAuth.js';
 import { useNavigate } from 'react-router-dom';
+import IconButton from '@mui/material/IconButton';
+import HangerIcon from '@mui/icons-material/Checkroom'; // Using Checkroom for hanger
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import { motion } from 'framer-motion';
 
 // Import the real data components we already fixed
 import MyItemsPage from './MyItemsPage.js';
@@ -30,24 +35,51 @@ const ProfileHeader = ({ user, onLogout }) => {
     );
 };
 
-const ProfileTabs = ({ activeTab, setActiveTab }) => (
-    <nav className="w-full border-b border-outline/20 flex justify-around sticky top-0 bg-surface z-10">
-        <TabButton icon="inventory_2" label="" isActive={activeTab === 'wardrobe'} onClick={() => setActiveTab('wardrobe')} />
-        <TabButton icon="favorite" label="" isActive={activeTab === 'favorites'} onClick={() => setActiveTab('favorites')} />
-        <TabButton icon="local_shipping" label="" isActive={activeTab === 'orders'} onClick={() => setActiveTab('orders')} />
-    </nav>
-);
+const ProfileTabs = ({ activeTab, setActiveTab }) => {
+    const iconVariants = {
+        inactive: {
+            scale: 1,
+            rotate: 0
+        },
+        active: {
+            scale: 1.2,
+            rotate: [0, -10, 10, -10, 10, 0],
+            transition: {
+                duration: 0.5
+            }
+        }
+    };
 
-const TabButton = ({ icon, label, onClick, isActive }) => (
-    <button 
-        onClick={onClick}
-        className={`flex-grow flex flex-col sm:flex-row justify-center items-center py-3 px-2 gap-2 transition-colors duration-200 ${isActive ? 'border-b-2 border-primary text-primary' : 'text-on-surface-variant hover:text-on-surface'}`}
-        aria-label={label}
-    >
-        <span className="material-icons-outlined">{icon}</span>
-        <span className="font-semibold text-sm sm:text-base">{label}</span>
-    </button>
-);
+    return (
+        <nav className="w-full border-b border-outline/20 flex justify-around sticky top-0 bg-surface z-10">
+            <motion.div
+                animate={activeTab === 'wardrobe' ? 'active' : 'inactive'}
+                variants={iconVariants}
+            >
+                <IconButton onClick={() => setActiveTab('wardrobe')} color={activeTab === 'wardrobe' ? 'primary' : 'default'} aria-label="inventory_2">
+                    <HangerIcon />
+                </IconButton>
+            </motion.div>
+            <motion.div
+                animate={activeTab === 'favorites' ? 'active' : 'inactive'}
+                variants={iconVariants}
+            >
+                <IconButton onClick={() => setActiveTab('favorites')} color={activeTab === 'favorites' ? 'primary' : 'default'} aria-label="favorite">
+                    <FavoriteIcon />
+                </IconButton>
+            </motion.div>
+            <motion.div
+                animate={activeTab === 'orders' ? 'active' : 'inactive'}
+                variants={iconVariants}
+            >
+                <IconButton onClick={() => setActiveTab('orders')} color={activeTab === 'orders' ? 'primary' : 'default'} aria-label="local_shipping">
+                    <LocalShippingIcon />
+                </IconButton>
+            </motion.div>
+        </nav>
+    );
+};
+
 
 // --- Main Profile Screen Component (Now a Container) ---
 

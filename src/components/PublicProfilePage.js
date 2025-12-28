@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import useRealtimeDB from '../hooks/useRealtimeDB.js';
-import { db } from '../firebase.js';
+import { rtdb } from '../firebase.js';
 import { ref, onValue } from 'firebase/database';
 
 const StarIcon = ({ fill = 'currentColor' }) => (
@@ -27,7 +27,7 @@ const PublicProfilePage = () => {
 
     useEffect(() => {
         if (!userId) return;
-        const userRef = ref(db, `users/${userId}`);
+        const userRef = ref(rtdb, `users/${userId}`);
         setLoadingProfile(true);
         const unsubscribe = onValue(userRef, (snapshot) => {
             if (snapshot.exists()) {

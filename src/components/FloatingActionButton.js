@@ -47,16 +47,16 @@ const FloatingActionButton = () => {
     }, [isScrolled]);
 
     const handleClick = () => {
-        // Elastic animation on click
-        gsap.fromTo(buttonRef.current, 
-            { scale: 0.95 }, 
-            { 
-                scale: 1, 
-                duration: 0.6, 
-                ease: 'elastic.out(1, 0.4)',
-                onComplete: () => navigate('/add-suit') 
+        // GSAP animation for tap effect
+        gsap.to(buttonRef.current, {
+            scale: 0.95,
+            duration: 0.1,
+            yoyo: true,
+            repeat: 1,
+            onComplete: () => {
+                navigate('/add-suit');
             }
-        );
+        });
     };
 
     // Hide the button on specific pages where it's not needed
@@ -65,29 +65,25 @@ const FloatingActionButton = () => {
     }
 
     return (
-        <div 
-            // The FAB is now fixed at the bottom-center of the screen for all devices
+        <div
             className="fixed bottom-10 right-10 md:right-16 z-40"
         >
             <button
                 ref={buttonRef}
                 onClick={handleClick}
                 className="flex items-center justify-center h-14 bg-primary text-on-primary shadow-2xl rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/30 overflow-hidden"
-                // Initial state is expanded
                 style={{ width: '170px' }} 
                 aria-label="Añadir nuevo traje"
             >
-                {/* Icon is absolutely positioned to stay centered when collapsed */}
                 <div ref={iconRef} className="absolute left-4 top-1/2 -translate-y-1/2">
                      <svg className="h-7 w-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                 </div>
-                {/* Text is positioned to the right of the icon */}
                 <span 
                     ref={textRef}
                     className="font-semibold whitespace-nowrap pl-8"
-                    style={{ opacity: 1 }} // Initially visible
+                    style={{ opacity: 1 }} 
                 >
                     Añadir traje
                 </span>

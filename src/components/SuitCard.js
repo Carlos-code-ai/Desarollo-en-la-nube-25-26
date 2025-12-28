@@ -52,16 +52,10 @@ const HeartIcon = ({ isFavorite, onToggle }) => {
 
 
 // --- SuitCard Component ---
-const SuitCard = ({ suit, isFavorite, onToggleFavorite, onSelect }) => {
+const SuitCard = ({ suit, isFavorite, onToggleFavorite }) => {
     const { id, name, price, size, imageUrl, availability } = suit;
     const isRented = availability && availability.includes('rented');
     const cardRef = useRef(null);
-
-    const handleCardClick = () => {
-        if (onSelect) {
-            onSelect(id);
-        }
-    };
 
     // GSAP animation for hover effect
     const handleMouseEnter = () => {
@@ -73,11 +67,11 @@ const SuitCard = ({ suit, isFavorite, onToggleFavorite, onSelect }) => {
     };
 
     return (
-        <div 
-            onClick={handleCardClick}
+        <Link
+            to={`/suit/${id}`}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
-            className="block w-full rounded-2xl overflow-hidden shadow-lg bg-surface-container-high transition-transform duration-300 ease-in-out cursor-pointer"
+            className="block w-full rounded-2xl overflow-hidden shadow-lg bg-surface-container-high transition-transform duration-300 ease-in-out"
             style={{ willChange: 'transform' }}
         >
             <div ref={cardRef} className="relative flex flex-col h-full">
@@ -98,7 +92,7 @@ const SuitCard = ({ suit, isFavorite, onToggleFavorite, onSelect }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 };
 

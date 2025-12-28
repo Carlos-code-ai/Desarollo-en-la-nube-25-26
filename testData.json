@@ -1,0 +1,67 @@
+[
+  {
+    "nombre": "Esmóquin Clásico Negro",
+    "precioDia": 75.00,
+    "talla": "52L",
+    "tipoEvento": "Boda",
+    "estado": "Excelente",
+    "colores": ["Negro"],
+    "materiales": ["Lana", "Seda"],
+    "descripcion": "Elegante esmóquin negro de corte clásico, perfecto para bodas y eventos de gala. Solapas de seda y pantalón a juego.",
+    "imagenes": ["https://picsum.photos/id/201/400/600"],
+    "propietarioId": "user_juan_perez",
+    "disponibilidad": true
+  },
+  {
+    "nombre": "Traje de Lino Azul Cielo",
+    "precioDia": 50.00,
+    "talla": "M",
+    "tipoEvento": "Graduación",
+    "estado": "Buen estado",
+    "colores": ["Azul Cielo"],
+    "materiales": ["Lino"],
+    "descripcion": "Traje de lino ligero, ideal para eventos de día y climas cálidos. Fresco y cómodo.",
+    "imagenes": ["https://picsum.photos/id/202/400/600"],
+    "propietarioId": "user_luis_gomez",
+    "disponibilidad": true
+  },
+  {
+    "nombre": "Chaqué Gris Marengo",
+    "precioDia": 90.00,
+    "talla": "50",
+    "tipoEvento": "Boda",
+    "estado": "Nuevo",
+    "colores": ["Gris Marengo", "Negro"],
+    "materiales": ["Lana fría"],
+    "descripcion": "Chaqué tradicional para bodas de día. Incluye levita, pantalón a rayas y chaleco.",
+    "imagenes": ["https://picsum.photos/id/203/400/600"],
+    "propietarioId": "user_pedro_ramirez",
+    "disponibilidad": false
+  },
+  {
+    "nombre": "Traje Corporativo Gris Oxford",
+    "precioDia": 45.00,
+    "talla": "48",
+    "tipoEvento": "Corporativo",
+    "estado": "Excelente",
+    "colores": ["Gris Oxford"],
+    "materiales": ["Lana", "Poliéster"],
+    "descripcion": "Traje de corte moderno y profesional, perfecto para reuniones de negocios y eventos corporativos.",
+    "imagenes": ["https://picsum.photos/id/204/400/600"],
+    "propietarioId": "user_ana_lopez",
+    "disponibilidad": true
+  },
+  {
+    "nombre": "Esmóquin Blanco Marfil",
+    "precioDia": 85.00,
+    "talla": "L",
+    "tipoEvento": "Gala",
+    "estado": "Nuevo",
+    "colores": ["Blanco Marfil", "Negro"],
+    "materiales": ["Seda", "Lino"],
+    "descripcion": "Lujoso esmóquin de lino y seda en color blanco marfil con solapas negras en contraste. Ideal para galas y eventos de etiqueta en climas cálidos.",
+    "imagenes": ["https://picsum.photos/id/205/400/600"],
+    "propietarioId": "user_sofia_torres",
+    "disponibilidad": true
+  }
+]

@@ -19,7 +19,6 @@ import FloatingActionButton from './components/FloatingActionButton.js';
 
 const App = () => {
     const { user, loading } = useAuth(getAuth());
-    const [searchQuery, setSearchQuery] = useState('');
     const location = useLocation();
 
     if (loading) {
@@ -34,13 +33,13 @@ const App = () => {
 
     return (
         <div className="bg-background text-on-background min-h-screen flex flex-col font-sans">
-            <Header onSearch={setSearchQuery} />
-            <main className="flex-grow p-4 md:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+            <Header />
+            <main className="flex-grow w-full">
                 <AnimatePresence mode="wait">
                     <Routes location={location} key={location.pathname}>
                         <Route 
                             path="/"
-                            element={<HomePage searchQuery={searchQuery} />}
+                            element={<HomePage />}
                         />
                         <Route path="/suit/:suitId" element={<SuitDetailPage />} />
                         <Route path="/profile" element={<ProfileScreen />} />

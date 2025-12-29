@@ -3,6 +3,10 @@ import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 
+// --- Placeholder Image ---
+// Using an inline SVG to avoid external network requests and CSP issues.
+const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNnB4IiBmaWxsPSIjY2NjIj5TaW4gSW1hZ2VuPC90ZXh0Pjwvc3ZnPg==";
+
 // --- SuitCard Component ---
 const SuitCard = ({ suit }) => {
     const { id, name, price, size, imageUrls, availability } = suit;
@@ -17,6 +21,9 @@ const SuitCard = ({ suit }) => {
         gsap.to(cardRef.current, { y: 0, scale: 1, duration: 0.2, ease: 'power2.in' });
     };
 
+    // Use the first available image or the inline SVG placeholder
+    const displayImage = imageUrls?.[0] || placeholderImage;
+
     return (
         <Link
             to={`/suit/${id}`}
@@ -27,7 +34,7 @@ const SuitCard = ({ suit }) => {
         >
             <div ref={cardRef} className="relative flex flex-col h-full">
                 <div className="relative w-full aspect-[3/4] overflow-hidden">
-                    <img src={imageUrls?.[0] || 'https://via.placeholder.com/400x500.png?text=Sin+Imagen'} alt={name} className="w-full h-full object-cover" />
+                    <img src={displayImage} alt={name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                     {isRented && <div className="absolute top-3 left-3 bg-error text-on-error px-2.5 py-1 text-xs font-bold rounded-full z-10">ALQUILADO</div>}
                      <div className="absolute bottom-0 left-0 right-0 p-4 text-white">

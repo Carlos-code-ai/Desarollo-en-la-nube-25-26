@@ -1,51 +1,78 @@
 
 import { useState, useEffect } from 'react';
-import { rtdb } from '../firebase.js';
-import { ref, query, orderByChild, onValue, limitToLast } from 'firebase/database';
-import { adaptSuitData } from '../utils/dataAdapter.js'; // <-- IMPORT THE ADAPTER
+import { getDatabase, ref, onValue } from 'firebase/database';
 
+// --- Data Adapter for Suit Objects ---
+const suitAdapter = (suit, id) => {
+    const name = suit.name || suit.nombre;
+    const description = suit.description || suit.descripcion || 'Descripción no disponible.';
+    const price = suit.price || suit.precioDia || 0;
+    const size = suit.size || suit.talla || 'No especificada';
+
+    let imageUrls = [];
+    if (Array.isArray(suit.imageUrls)) {
+        imageUrls = suit.imageUrls;
+    } else if (typeof suit.imageUrl === 'string') {
+        imageUrls = [suit.imageUrl];
+    }
+
+    const createdAt = suit.createdAt || suit.timestamp || new Date(2000, 0, 1).getTime();
+
+    return {
+        id,
+        name,
+        description,
+        price: Number(price),
+        size,
+        imageUrls,
+        location: suit.location || suit.ciudad || 'Ubicación no disponible',
+        availability: suit.availability || [],
+        userId: suit.userId || null,
+        createdAt: Number(createdAt),
+    };
+};
+
+// --- Custom Hook to Fetch All Items ---
 const useAllItems = () => {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
+    useEffect(() => {
+        const db = getDatabase();
+        const itemsRef = ref(db, 'trajes');
 
-    const dbRef = ref(rtdb, 'trajes');
-    const allItemsQuery = query(dbRef, orderByChild('createdAt'), limitToLast(100));
+        const unsubscribe = onValue(itemsRef, (snapshot) => {
+            try {
+                const data = snapshot.val();
+                if (data) {
+                    const allItems = Object.keys(data).map(key => suitAdapter(data[key], key));
+                    
+                    // Filter out items that are clearly placeholders or invalid
+                    const validItems = allItems.filter(item => {
+                        return item.name && item.name !== 'Traje sin Nombre' && item.imageUrls.length > 0;
+                    });
 
-    const unsubscribe = onValue(allItemsQuery, (snapshot) => {
-      try {
-        const rawData = snapshot.val();
-        let adaptedArray = [];
-        if (rawData) {
-          adaptedArray = Object.keys(rawData)
-            .map(key => adaptSuitData(rawData[key], key)) // <-- USE THE ADAPTER
-            .filter(item => item !== null); // Filter out any null results from adapter
-        }
-        
-        // The adapter handles data consistency, so we can reliably sort
-        adaptedArray.sort((a, b) => b.createdAt - a.createdAt);
-        setItems(adaptedArray);
+                    setItems(validItems);
+                } else {
+                    setItems([]);
+                }
+            } catch (err) {
+                console.error("Failed to process items:", err);
+                setError(err);
+            } finally {
+                setLoading(false);
+            }
+        }, (err) => {
+            console.error("Firebase read failed:", err);
+            setError(err);
+            setLoading(false);
+        });
 
-      } catch (err) {
-        console.error("Error processing all items: ", err);
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    }, (err) => {
-      console.error("Error fetching all items: ", err);
-      setError(err);
-      setLoading(false);
-    });
+        return () => unsubscribe();
+    }, []);
 
-    return () => unsubscribe();
-  }, []);
-
-  return { items, loading, error };
+    return { items, loading, error };
 };
 
 export default useAllItems;

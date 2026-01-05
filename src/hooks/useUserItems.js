@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
-import { rtdb } from '../firebase.js';
-import { ref, query, orderByChild, equalTo, onValue } from 'firebase/database';
-import { adaptSuitData } from '../utils/dataAdapter.js'; // <-- IMPORT THE ADAPTER
+// CORRECT: Import getDatabase directly from the firebase library
+import { getDatabase, ref, query, orderByChild, equalTo, onValue } from 'firebase/database';
+import { adaptSuitData } from '../utils/dataAdapter.js';
 
 const useUserItems = (user) => {
   const [items, setItems] = useState([]);
@@ -10,67 +10,47 @@ const useUserItems = (user) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
+    if (!user || !user.uid) {
       setItems([]);
+      setLoading(false);
       return;
     }
 
     setLoading(true);
     setError(null);
 
-    const dbRef = ref(rtdb, 'trajes');
-    const { uid, displayName } = user;
+    // CORRECT: Initialize the database correctly, letting it use the central firebaseConfig.js
+    const db = getDatabase();
+    const dbRef = ref(db, 'trajes');
+    const userItemsQuery = query(dbRef, orderByChild('ownerId'), equalTo(user.uid));
 
-    const queries = [
-      query(dbRef, orderByChild('ownerId'), equalTo(uid)),
-      query(dbRef, orderByChild('propietarioId'), equalTo(uid))
-    ];
-
-    if (displayName) {
-      queries.push(query(dbRef, orderByChild('usuario'), equalTo(displayName.toUpperCase())));
-    }
-
-    let results = {};
-    const listeners = [];
-    let queriesFinished = 0;
-
-    const processSnapshot = (snapshot) => {
+    const unsubscribe = onValue(userItemsQuery, (snapshot) => {
+      try {
         const rawData = snapshot.val();
         if (rawData) {
-            Object.keys(rawData).forEach(key => {
-                // Use the item key as the definitive ID, preventing duplicates.
-                // Adapt the data before it's merged into the results.
-                results[key] = adaptSuitData(rawData[key], key); 
-            });
+          const dataArray = Object.keys(rawData).map(key => adaptSuitData(rawData[key], key));
+          // Sort by creation date to show newest first
+          dataArray.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          setItems(dataArray);
+        } else {
+          setItems([]); // No items found for this user, not an error.
         }
-        queriesFinished++;
-
-        if (queriesFinished === queries.length) {
-            const dataArray = Object.values(results).filter(item => item !== null);
-            dataArray.sort((a, b) => b.createdAt - a.createdAt);
-            setItems(dataArray);
-            setLoading(false);
-        }
-    };
-    
-    const handleError = (err) => {
-        console.error("Error fetching user items:", err);
-        setError(err);
-        queriesFinished++;
-        if(queriesFinished === queries.length) {
-            setLoading(false);
-        }
-    };
-
-    queries.forEach(q => {
-        listeners.push(onValue(q, processSnapshot, handleError));
+      } catch (err) {
+          console.error("Error processing user items:", err);
+          setError(err); // Set error if data processing fails
+      } finally {
+          setLoading(false);
+      }
+    }, (err) => {
+      console.error("Error fetching user items:", err);
+      setError(err);
+      setLoading(false);
     });
 
-    return () => {
-      listeners.forEach(unsubscribe => unsubscribe());
-    };
-  }, [user]);
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+
+  }, [user]); // Rerun when user object changes
 
   return { items, loading, error };
 };

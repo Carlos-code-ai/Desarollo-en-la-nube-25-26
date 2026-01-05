@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDatabase, ref, push, serverTimestamp } from 'firebase/database';
+import { getDatabase, ref, push } from 'firebase/database';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import useAuth from '../hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,7 +33,11 @@ const ModernSelectField = ({ label, options, value, onChange, name, required }) 
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const selectedLabel = value || <span className="text-on-surface-variant">Selecciona una opción</span>;
+    const selectedLabel = value ? (
+        <span>{value}</span>
+    ) : (
+        <span className="text-on-surface-variant">Selecciona una opción</span>
+    );
 
     return (
         <div className="relative" ref={selectRef}>
@@ -71,9 +75,8 @@ const AddSuitPage = () => {
     const [formData, setFormData] = useState({ name: '', description: '', brand: '', price: '', size: '', color: '', state: '', fabric: '', style: '', eventType: '' });
     
     const [imageFile, setImageFile] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
-    const [imageSource, setImageSource] = useState('file');
     const [imageUrlInput, setImageUrlInput] = useState('');
+    const [imagePreview, setImagePreview] = useState(null);
     
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -84,8 +87,16 @@ const AddSuitPage = () => {
             setImageFile(file);
             const previewUrl = URL.createObjectURL(file);
             setImagePreview(previewUrl);
+            setImageUrlInput(''); // Clear URL input if file is selected
             setError('');
         }
+    };
+
+    const handleUrlChange = (e) => {
+        const url = e.target.value;
+        setImageUrlInput(url);
+        setImagePreview(url); // Show preview from URL
+        setImageFile(null); // Clear file input if URL is entered
     };
 
     const handleChange = (e) => {
@@ -95,8 +106,8 @@ const AddSuitPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if ((imageSource === 'file' && !imageFile) && (imageSource === 'url' && !imageUrlInput.trim())) {
-            setError('Por favor, añade una imagen para el traje.');
+        if (!imageFile && !imageUrlInput) {
+            setError('Por favor, añade una imagen para el traje (archivo o URL).');
             return;
         }
 
@@ -104,27 +115,34 @@ const AddSuitPage = () => {
         setError('');
 
         try {
-            let imageUrl = '';
+            let finalImageUrl;
 
-            if (imageSource === 'file' && imageFile) {
+            if (imageFile) {
                 const storage = getStorage();
                 const imageName = `${Date.now()}-${imageFile.name}`;
                 const newImageRef = storageRef(storage, `suit-images/${imageName}`);
                 const uploadResult = await uploadBytes(newImageRef, imageFile);
-                imageUrl = await getDownloadURL(uploadResult.ref);
-            } else if (imageSource === 'url' && imageUrlInput) {
-                imageUrl = imageUrlInput;
+                finalImageUrl = await getDownloadURL(uploadResult.ref);
+            } else {
+                finalImageUrl = imageUrlInput;
             }
-
+            
             const db = getDatabase();
             const suitsRef = ref(db, 'trajes');
-            await push(suitsRef, {
+            
+            // Construct the payload to match database rules
+            const payload = {
                 ...formData,
                 price: parseFloat(formData.price) || 0,
-                imageUrl,
-                ownerId: user.uid, // Standardized to ownerId
-                createdAt: serverTimestamp()
-            });
+                imageUrl: finalImageUrl, // Correct: single URL
+                ownerId: user.uid,
+                ownerName: user.displayName || 'Nombre no disponible', // Add ownerName
+                ownerPhotoURL: user.photoURL || '', // Add ownerPhotoURL
+                createdAt: new Date().toISOString(),
+                availability: ['available']
+            };
+
+            await push(suitsRef, payload);
             
             navigate('/profile');
 
@@ -137,63 +155,60 @@ const AddSuitPage = () => {
     };
 
     return (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-6xl mx-auto p-4 md:p-8">
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-1 space-y-4">
-                    <h2 className="text-2xl font-bold text-on-surface mb-2">Imagen del Traje</h2>
-                    <div className="aspect-w-1 aspect-h-1 bg-surface-container-high rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-outline/50">
-                        {imagePreview ? <img src={imagePreview} alt="Vista previa" className="w-full h-full object-cover" /> : <div className="text-center p-4 text-on-surface-variant"><span className="material-icons-outlined text-5xl">add_a_photo</span><p className="mt-2">Añade una imagen</p></div>}
-                    </div>
-                    <div className="flex w-full bg-surface-container-high rounded-full p-1">
-                         <button type="button" onClick={() => setImageSource('file')} className={`w-1/2 py-2 text-sm font-bold rounded-full transition-colors ${imageSource === 'file' ? 'bg-primary text-on-primary shadow' : 'text-on-surface-variant'}`}>
-                            Subir Archivo
-                        </button>
-                        <button type="button" onClick={() => setImageSource('url')} className={`w-1/2 py-2 text-sm font-bold rounded-full transition-colors ${imageSource === 'url' ? 'bg-primary text-on-primary shadow' : 'text-on-surface-variant'}`}>
-                            Usar URL
-                        </button>
-                    </div>
-                     {imageSource === 'file' ? (
+         <div className="w-full min-h-screen flex items-center justify-center bg-surface-container-lowest p-4 md:p-8">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-6xl">
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="md:col-span-1 space-y-4">
+                        <h2 className="text-2xl font-bold text-on-surface mb-2">Imagen del Traje</h2>
+                        <div className="aspect-[4/5] bg-surface-container-high rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-outline/50">
+                            {imagePreview ? <img src={imagePreview} alt="Vista previa" className="w-full h-full object-cover" /> : <div className="text-center p-4 text-on-surface-variant"><span className="material-icons-outlined text-5xl">add_a_photo</span><p className="mt-2">Añade una imagen</p></div>}
+                        </div>
                         <div className="relative">
                             <input type="file" id="file-upload" accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                             <label htmlFor="file-upload" className="cursor-pointer w-full inline-block text-center py-3 px-4 bg-secondary text-on-secondary font-semibold rounded-full hover:bg-opacity-90 transition-colors">
                                 {imageFile ? 'Cambiar Archivo' : 'Seleccionar Archivo'}
                             </label>
                         </div>
-                    ) : (
-                        <InputField label="URL de la Imagen" type="url" placeholder="https://ejemplo.com/imagen.jpg" value={imageUrlInput} onChange={e => { setImageUrlInput(e.target.value); if(e.target.value) setImagePreview(e.target.value); }} />
-                    )}
-                </div>
+                        <div className="text-center my-2 text-on-surface-variant font-semibold">o</div>
+                         <InputField label="Pegar URL de la imagen" name="imageUrl" type="url" value={imageUrlInput} onChange={handleUrlChange} placeholder="https://ejemplo.com/imagen.jpg" />
+                    </div>
 
-                <div className="md:col-span-2 space-y-4">
-                    <h2 className="text-2xl font-bold text-on-surface mb-2">Añadir Detalles del Traje</h2>
-                    {error && <div className="p-3 mb-3 text-center bg-error/20 text-error-dark font-bold rounded-lg">{error}</div>}
-                    <InputField label="Nombre del Traje" name="name" value={formData.name} onChange={handleChange} required />
-                    <TextAreaField label="Descripción" name="description" value={formData.description} onChange={handleChange} required />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <InputField label="Marca" name="brand" value={formData.brand} onChange={handleChange} />
-                        <InputField label="Precio por día (€)" name="price" type="number" value={formData.price} onChange={handleChange} required />
+                    <div className="md:col-span-2 space-y-4">
+                        <h2 className="text-2xl font-bold text-on-surface mb-2">Añadir Detalles del Traje</h2>
+                        {error && <div className="p-3 mb-3 text-center bg-error/20 text-error-dark font-bold rounded-lg">{error}</div>}
+                        
+                        <InputField label="Nombre del Traje" name="name" value={formData.name} onChange={handleChange} required />
+                        <TextAreaField label="Descripción" name="description" value={formData.description} onChange={handleChange} required />
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <InputField label="Marca" name="brand" value={formData.brand} onChange={handleChange} />
+                            <InputField label="Precio por día (€)" name="price" type="number" value={formData.price} onChange={handleChange} required />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <ModernSelectField label="Talla" name="size" value={formData.size} onChange={handleChange} options={['XS', 'S', 'M', 'L', 'XL', 'XXL']} required />
+                            <InputField label="Color" name="color" value={formData.color} onChange={handleChange} />
+                            <ModernSelectField label="Estado" name="state" value={formData.state} onChange={handleChange} options={['Nuevo', 'Casi nuevo', 'Usado', 'Con desperfectos']} required />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <InputField label="Tejido" name="fabric" value={formData.fabric} onChange={handleChange} />
+                            <InputField label="Estilo" name="style" value={formData.style} onChange={handleChange} />
+                        </div>
+                        
+                        <ModernSelectField label="Tipo de Evento" name="eventType" value={formData.eventType} onChange={handleChange} options={['Boda', 'Gala', 'Fiesta', 'Negocios', 'Casual', 'Otro']} required />
+                        
+                        <div className="flex items-center justify-end gap-4 pt-4">
+                            <button type="button" onClick={() => navigate('/profile')} className="px-6 py-2 bg-surface-container-high text-on-surface-variant rounded-full font-semibold hover:bg-surface-container-highest transition-colors">Cancelar</button>
+                            <button type="submit" disabled={isLoading} className="px-8 py-2 bg-primary text-on-primary rounded-full font-bold shadow-lg hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 flex items-center gap-2">
+                                {isLoading && <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, duration: 1, ease: 'linear'}}><span className="material-icons-outlined">sync</span></motion.div>}
+                                {isLoading ? 'Añadiendo...' : 'Añadir Traje'}
+                            </button>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <ModernSelectField label="Talla" name="size" value={formData.size} onChange={handleChange} options={['XS', 'S', 'M', 'L', 'XL', 'XXL']} required />
-                        <InputField label="Color" name="color" value={formData.color} onChange={handleChange} />
-                        <ModernSelectField label="Estado" name="state" value={formData.state} onChange={handleChange} options={['Nuevo', 'Casi nuevo', 'Usado', 'Con desperfectos']} required />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <InputField label="Tejido" name="fabric" value={formData.fabric} onChange={handleChange} />
-                        <InputField label="Estilo" name="style" value={formData.style} onChange={handleChange} />
-                    </div>
-                    <ModernSelectField label="Tipo de Evento" name="eventType" value={formData.eventType} onChange={handleChange} options={['Boda', 'Gala', 'Fiesta', 'Negocios', 'Casual', 'Otro']} required />
-                    
-                    <div className="flex items-center justify-end gap-4 pt-4">
-                        <button type="button" onClick={() => navigate('/profile')} className="px-6 py-2 bg-surface-container-high text-on-surface-variant rounded-full font-semibold hover:bg-surface-container-highest transition-colors">Cancelar</button>
-                        <button type="submit" disabled={isLoading} className="px-8 py-2 bg-primary text-on-primary rounded-full font-bold shadow-lg hover:bg-opacity-90 transition-all duration-200 disabled:opacity-50 flex items-center gap-2">
-                            {isLoading && <motion.div animate={{rotate: 360}} transition={{repeat: Infinity, duration: 1, ease: 'linear'}}><span className="material-icons-outlined">sync</span></motion.div>}
-                            {isLoading ? 'Añadiendo...' : 'Añadir Traje'}
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </motion.div>
+                </form>
+            </motion.div>
+        </div>
     );
 };
 

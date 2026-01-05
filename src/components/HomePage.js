@@ -5,36 +5,41 @@ import SortBy from './SortBy.js';
 import FilterPanel from './FilterPanel.js';
 import { AnimatePresence, motion } from 'framer-motion';
 
-const HomePage = () => {
-    const [searchTerm, setSearchTerm] = useState('');
+const HomePage = ({ searchQuery }) => {
     const [sortOrder, setSortOrder] = useState('newest');
-    const [filters, setFilters] = useState({ size: '', city: '' });
+    const [filters, setFilters] = useState({ size: '', status: '', eventType: '', priceRange: [0, 500] });
     const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
     const { items: allSuits, loading, error } = useAllItems();
 
     const handleClearFilters = () => {
-        setFilters({ size: '', city: '' });
+        setFilters({ size: '', status: '', eventType: '', priceRange: [0, 500] });
     };
 
     const processedSuits = React.useMemo(() => {
         let filtered = allSuits;
 
-        if (searchTerm) {
+        // Text search
+        if (searchQuery) {
+            const lowerCaseSearch = searchQuery.toLowerCase();
             filtered = filtered.filter(suit =>
-                suit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                suit.description.toLowerCase().includes(searchTerm.toLowerCase())
+                suit.name.toLowerCase().includes(lowerCaseSearch) ||
+                suit.description.toLowerCase().includes(lowerCaseSearch)
             );
         }
 
-        if (filters.size) {
-            filtered = filtered.filter(suit => suit.size.toLowerCase() === filters.size.toLowerCase());
-        }
+        // Filter by properties
+        Object.keys(filters).forEach(key => {
+            if (key === 'priceRange') {
+                if (filters.priceRange) {
+                    filtered = filtered.filter(suit => suit.price >= filters.priceRange[0] && suit.price <= filters.priceRange[1]);
+                }
+            } else if (filters[key]) {
+                filtered = filtered.filter(suit => suit[key] && suit[key].toLowerCase() === filters[key].toLowerCase());
+            }
+        });
 
-        if (filters.city) {
-             filtered = filtered.filter(suit => suit.location.toLowerCase().includes(filters.city.toLowerCase()));
-        }
-
+        // Sorting
         const sorted = [...filtered].sort((a, b) => {
             switch (sortOrder) {
                 case 'priceAsc': return a.price - b.price;
@@ -45,46 +50,47 @@ const HomePage = () => {
         });
 
         return sorted;
-    }, [allSuits, searchTerm, sortOrder, filters]);
-
+    }, [allSuits, searchQuery, sortOrder, filters]);
 
     if (error) return <div className="text-center py-10 text-error">Error al cargar. Por favor, intenta de nuevo.</div>;
 
     return (
-    <div className="w-full min-h-screen bg-[#f8f9fa]">
-        {/* 1. ESPACIADOR: Esto empuja el contenido debajo del Navbar fijo */}
+    <div className="w-full min-h-screen bg-surface-container-lowest">
         <div className="h-24 md:h-28"></div> 
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            {/* 2. CABECERA: Título y botones bien alineados */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                    Todos los Trajes
-                </h1>
-                
+            <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 mb-8">
                 <div className="flex items-center gap-3">
                     <SortBy sortOrder={sortOrder} onSortChange={setSortOrder} />
                     
-                    <button
+                    <motion.button
                         onClick={() => setIsFilterPanelOpen(true)}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-gray-50 transition-all font-medium text-gray-700"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-surface border border-outline/30 rounded-full shadow-sm font-semibold text-on-surface-variant"
+                        whileHover={{ scale: 1.05, y: -2, shadow: "md" }}
+                        whileTap={{ scale: 0.98, y: 0 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                     >
-                        <span className="material-icons-outlined text-gray-500 text-[20px]">tune</span>
+                        <motion.span 
+                            className="material-icons-outlined"
+                            animate={{ rotate: isFilterPanelOpen ? 45 : 0}}
+                            transition={{duration: 0.3}}
+                        >
+                            tune
+                        </motion.span>
                         <span>Filtros</span>
-                    </button>
+                    </motion.button>
                 </div>
             </div>
 
-            {/* 3. GRID: Asegúrate de que tenga suficiente margen inferior */}
             {loading ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    {[...Array(10)].map((_, i) => <SuitCard.Skeleton key={i} />)}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
+                    {[...Array(9)].map((_, i) => <SuitCard.Skeleton key={i} />)}
                 </div>
             ) : (
                 <motion.div 
                     layout 
-                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-24"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10 pb-24"
                 >
                     <AnimatePresence>
                         {processedSuits.map(suit => (
@@ -95,7 +101,6 @@ const HomePage = () => {
             )}
         </div>
 
-        {/* Panel de Filtros */}
         <AnimatePresence>
             {isFilterPanelOpen && (
                 <FilterPanel 

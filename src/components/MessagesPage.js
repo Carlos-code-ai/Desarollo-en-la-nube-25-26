@@ -5,7 +5,6 @@ import { ref, onValue, push, update, serverTimestamp, query, orderByChild, equal
 import useAuth from '../hooks/useAuth.js';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const getOtherUserId = (chat, currentUser) => {
     if (!chat || !chat.members || !currentUser) return null;
@@ -62,7 +61,7 @@ const BookingStatusDisplay = ({ booking, isOwner, onUpdateStatus }) => {
 };
 
 const ChatView = ({ chatId }) => {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth(); // Destructure loading state from useAuth
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [chatInfo, setChatInfo] = useState(null);
@@ -73,6 +72,11 @@ const ChatView = ({ chatId }) => {
     const messageContainerRef = useRef(null);
 
     useEffect(() => {
+        if (!chatId || authLoading) {
+            setLoading(true);
+            return;
+        }
+
         setLoading(true);
         setMessages([]);
 
@@ -104,20 +108,7 @@ const ChatView = ({ chatId }) => {
             unsubscribeChat();
             unsubscribeMessages();
         };
-    }, [chatId, user?.uid]);
-
-    // Smart scrolling effect
-    useEffect(() => {
-        const container = messageContainerRef.current;
-        if (!container) return;
-
-        const scrollThreshold = 150; // pixels from bottom
-        const isNearBottom = container.scrollHeight - container.clientHeight - container.scrollTop < scrollThreshold;
-
-        if (isNearBottom) {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [messages]);
+    }, [chatId, user?.uid, authLoading]);
 
     const handleSendMessage = async (e) => {
         e?.preventDefault();
@@ -155,7 +146,7 @@ const ChatView = ({ chatId }) => {
         await update(ref(rtdb), updates);
     };
     
-    if (loading) return <div className="h-full grid place-items-center"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div></div>;
+    if (loading || authLoading) return <div className="h-full grid place-items-center"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div></div>;
     if (!chatInfo) return <div className="flex flex-col items-center justify-center h-full text-center p-8 bg-surface-container-low rounded-2xl"><span className="material-icons text-error text-8xl mb-4">error_outline</span><h2 className="text-xl font-bold text-on-surface mb-2">Error al cargar el chat</h2><p className="text-on-surface-variant max-w-sm">No se pudo encontrar la conversación.</p></div>;
     
     const otherUserId = getOtherUserId(chatInfo, user);
@@ -231,55 +222,68 @@ const ChatListItem = ({ chat, active, onClick }) => {
 };
 
 const MessagesPage = () => {
-    const { user } = useAuth();
+    const { user, loading: authLoading } = useAuth(); // Use auth loading state
     const { chatId } = useParams();
     const navigate = useNavigate();
     const [chats, setChats] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!user) {
+        if (authLoading || !user) {
             setLoading(false);
             return;
         }
         
         setLoading(true);
-        const chatsRef = query(ref(rtdb, 'chats'), orderByChild(`members/${user.uid}`), equalTo(true));
+        const userChatsRef = ref(rtdb, `users/${user.uid}/chats`);
 
-        const unsubscribe = onValue(chatsRef, (snapshot) => {
-            const allChats = snapshot.val() || {};
-            const userChats = Object.keys(allChats).map(id => ({ id, ...allChats[id] }));
-            
-            userChats.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            
-            setChats(userChats);
-            setLoading(false);
+
+        const unsubscribe = onValue(userChatsRef, (snapshot) => {
+            const userChatIds = snapshot.val() || {};
+            const chatPromises = Object.keys(userChatIds).map(chatId => {
+                return new Promise((resolve) => {
+                    const chatRef = ref(rtdb, `chats/${chatId}`);
+                    onValue(chatRef, (chatSnapshot) => {
+                        resolve({ id: chatSnapshot.key, ...chatSnapshot.val() });
+                    }, () => resolve(null));
+                });
+            });
+
+            Promise.all(chatPromises).then(userChats => {
+                const validChats = userChats.filter(Boolean);
+                validChats.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                setChats(validChats);
+                setLoading(false);
+            });
+
         }, () => setLoading(false));
 
         return () => unsubscribe();
-    }, [user]);
+    }, [user, authLoading]);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 h-[calc(100vh-10rem)] p-4 animate-fade-in">
-            <div className="md:col-span-1 lg:col-span-1 bg-surface-container p-2 rounded-2xl overflow-y-auto space-y-2">
-                <h2 className="text-xl font-bold text-on-surface p-3">Conversaciones</h2>
-                {loading && <div className="p-3 text-center text-on-surface-variant">Cargando chats...</div>}
-                {!loading && chats.length === 0 && (
-                    <div className="p-4 text-center text-on-surface-variant">
-                        Aún no tienes conversaciones. Inicia una al solicitar el alquiler de un traje.
-                    </div>
-                )}
-                {chats.map(chat => (
-                    <ChatListItem 
-                        key={chat.id} 
-                        chat={chat} 
-                        active={chatId === chat.id} 
-                        onClick={() => navigate(`/messages/${chat.id}`)} 
-                    />
-                ))}
-            </div>
-            <div className="md:col-span-2 lg:col-span-3 h-full">
-                {chatId ? <ChatView chatId={chatId} /> : <NoChatSelected />}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 h-[calc(100vh-10rem)] py-4 animate-fade-in">
+                <div className="md:col-span-1 lg:col-span-1 bg-surface-container p-2 rounded-2xl overflow-y-auto space-y-2">
+                    <h2 className="text-xl font-bold text-on-surface p-3">Conversaciones</h2>
+                    {(loading || authLoading) && <div className="p-3 text-center text-on-surface-variant">Cargando chats...</div>}
+                    {!loading && !authLoading && chats.length === 0 && (
+                        <div className="p-4 text-center text-on-surface-variant">
+                            Aún no tienes conversaciones. Inicia una al solicitar el alquiler de un traje.
+                        </div>
+                    )}
+                    {chats.map(chat => (
+                        <ChatListItem 
+                            key={chat.id} 
+                            chat={chat} 
+                            active={chatId === chat.id} 
+                            onClick={() => navigate(`/messages/${chat.id}`)} 
+                        />
+                    ))}
+                </div>
+                <div className="md:col-span-2 lg:col-span-3 h-full">
+                    {chatId ? <ChatView chatId={chatId} /> : <NoChatSelected />}
+                </div>
             </div>
         </div>
     );

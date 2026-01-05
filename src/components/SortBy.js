@@ -7,12 +7,12 @@ const SORT_OPTIONS = {
     priceDesc: 'Precio: de Mayor a Menor',
 };
 
-const SortBy = ({ sortOption, setSortOption }) => {
+const SortBy = ({ sortOrder, onSortChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 
     const handleOptionClick = (option) => {
-        setSortOption(option);
+        onSortChange(option);
         setIsOpen(false);
     };
 
@@ -45,7 +45,7 @@ const SortBy = ({ sortOption, setSortOption }) => {
             <AnimatePresence>
                 {isOpen && (
                     <motion.div 
-                        className="absolute right-0 mt-2 w-64 bg-surface-container-low rounded-lg shadow-xl z-10 overflow-hidden border border-outline/20"
+                        className="absolute right-0 md:right-0 mt-2 w-64 bg-surface-container-low rounded-lg shadow-xl z-10 overflow-hidden border border-outline/20"
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
@@ -55,9 +55,9 @@ const SortBy = ({ sortOption, setSortOption }) => {
                                 <li key={key}>
                                     <button 
                                         onClick={() => handleOptionClick(key)}
-                                        className={`w-full text-left px-4 py-3 text-sm flex justify-between items-center transition-colors duration-150 ${sortOption === key ? 'bg-primary/20 text-primary-dark' : 'hover:bg-primary/10'}`}>
+                                        className={`w-full text-left px-4 py-3 text-sm flex justify-between items-center transition-colors duration-150 ${sortOrder === key ? 'bg-primary/20 text-primary-dark' : 'hover:bg-primary/10'}`}>
                                         <span>{value}</span>
-                                        {sortOption === key && <span className="material-icons-outlined">check</span>}
+                                        {sortOrder === key && <span className="material-icons-outlined">check</span>}
                                     </button>
                                 </li>
                             ))}

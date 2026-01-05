@@ -7,11 +7,11 @@
       }
     },
     "trajes": {
-      ".read": "auth != null",
+      ".read": true,
       ".indexOn": ["ownerId"],
       "$suitId": {
         ".write": "auth != null && (newData.child('ownerId').val() === auth.uid || !data.exists())",
-        ".validate": "newData.hasChildren(['name', 'size', 'price', 'description', 'imageUrl', 'ownerId', 'ownerName', 'ownerPhotoURL'])"
+        ".validate": "newData.hasChildren(['name', 'size', 'price', 'description', 'imageUrl', 'ownerId', 'ownerName', 'ownerPhotoURL', 'state', 'eventType'])"
       }
     },
     "bookings": {
@@ -23,14 +23,12 @@
       }
     },
     "chats": {
-       ".indexOn": ["suitId", "timestamp", "members"],
+      ".read": "auth != null",
+      ".indexOn": ["suitId", "timestamp"],
       "$chatId": {
-        ".read": "auth != null && data.child('members').child(auth.uid).exists()",
-        ".write": "auth != null && data.child('members').child(auth.uid).exists()",
-        ".validate": "newData.hasChildren(['id', 'suitId', 'lastMessage', 'timestamp', 'members', 'participantInfo'])",
-        "members": {
-           ".indexOn": ".value"
-        }
+        ".read": "data.child('members').child(auth.uid).exists()",
+        ".write": "auth != null && (newData.child('members').child(auth.uid).exists() || !data.exists())",
+        ".validate": "newData.hasChildren(['id', 'suitId', 'lastMessage', 'timestamp', 'members', 'participantInfo'])"
       }
     },
     "messages": {

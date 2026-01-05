@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { rtdb } from '../firebase.js'; // CRITICAL FIX: Use rtdb, not db
-import { ref, onValue, query, orderByChild, equalTo } from 'firebase/database';
+import { rtdb } from '../firebase.js';
+import { ref, onValue } from 'firebase/database';
 
 const useUnreadCount = (userId) => {
     const [unreadCount, setUnreadCount] = useState(0);
@@ -11,27 +11,58 @@ const useUnreadCount = (userId) => {
             return;
         }
 
-        // CRITICAL FIX: Use rtdb instance for Realtime Database query
-        const chatsRef = query(ref(rtdb, 'chats'), orderByChild(`members/${userId}`), equalTo(true));
+        const userChatsRef = ref(rtdb, `users/${userId}/chats`);
+        let chatListeners = [];
+        const chatDataMap = new Map();
 
-        const unsubscribe = onValue(chatsRef, (snapshot) => {
-            const chatsData = snapshot.val();
-            let totalUnread = 0;
-            if (chatsData) {
-                Object.values(chatsData).forEach(chat => {
-                    // Defensive check for chat.unreadCount and the specific user's count
-                    if (chat && chat.unreadCount && typeof chat.unreadCount[userId] === 'number') {
-                        totalUnread += chat.unreadCount[userId];
-                    }
-                });
+        const recomputeTotal = () => {
+            let total = 0;
+            for (const chat of chatDataMap.values()) {
+                if (chat && chat.unreadCount && chat.unreadCount[userId]) {
+                    total += chat.unreadCount[userId];
+                }
             }
-            setUnreadCount(totalUnread);
+            setUnreadCount(total);
+        };
+
+        const userChatsListener = onValue(userChatsRef, (snapshot) => {
+            // Clean up old chat listeners
+            chatListeners.forEach(unsubscribe => unsubscribe());
+            chatListeners = [];
+            chatDataMap.clear();
+
+            const chatIds = snapshot.val() ? Object.keys(snapshot.val()) : [];
+            
+            if (chatIds.length === 0) {
+                setUnreadCount(0);
+                return;
+            }
+
+            chatIds.forEach(chatId => {
+                const chatRef = ref(rtdb, `chats/${chatId}`);
+                const chatListener = onValue(chatRef, (chatSnapshot) => {
+                    const chatData = chatSnapshot.val();
+                    if (chatData) {
+                        chatDataMap.set(chatId, chatData);
+                    } else {
+                        chatDataMap.delete(chatId);
+                    }
+                    recomputeTotal();
+                }, (error) => {
+                    console.error(`Error fetching data for chat ${chatId}:`, error);
+                });
+                chatListeners.push(chatListener);
+            });
         }, (error) => {
-            console.error("Error fetching unread chat count:", error);
-            setUnreadCount(0); // Reset on error
+            console.error("Error fetching user's chat list:", error);
+            setUnreadCount(0);
         });
 
-        return () => unsubscribe();
+        return () => {
+            userChatsListener();
+            chatListeners.forEach(unsubscribe => unsubscribe());
+        };
+
     }, [userId]);
 
     return unreadCount;

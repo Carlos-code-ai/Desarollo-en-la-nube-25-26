@@ -1,13 +1,42 @@
 {
   "rules": {
-    "suits": {
-      ".read": "true",
-      "$suitId": {
-        // Allow write only if user is logged in and the suit's userId matches their own uid.
-        ".write": "auth != null && newData.child('userId').val() === auth.uid",
-        
-        // Ensure all required fields are present when writing.
-        ".validate": "newData.hasChildren(['name', 'description', 'size', 'color', 'price', 'imageUrl', 'isAvailable', 'userId'])"
+    "users": {
+      ".read": true, // Be cautious with this, consider more restrictive rules
+      "$uid": {
+        ".write": "$uid === auth.uid",
+        "favorites": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        }
+      }
+    },
+    "trajes": {
+      ".read": true,
+      ".indexOn": ["ownerId", "lowercasedName"],
+      "$trajeId": {
+        ".write": "auth != null && (data.exists() ? data.child('ownerId').val() === auth.uid : newData.child('ownerId').val() === auth.uid)",
+        ".validate": "newData.hasChildren(['name', 'description', 'price', 'imageUrl', 'ownerId', 'size', 'condition', 'eventType'])"
+      }
+    },
+    "bookings": {
+      ".indexOn": ["ownerId", "renterId"],
+      "$bookingId": {
+        ".read": "auth != null && (data.child('ownerId').val() === auth.uid || data.child('renterId').val() === auth.uid)",
+        ".write": "auth != null && (newData.child('renterId').val() === auth.uid || newData.child('ownerId').val() === auth.uid)",
+        ".validate": "newData.hasChildren(['chatId', 'suitId', 'suitName', 'suitImageUrl', 'ownerId', 'renterId', 'renterName', 'renterPhotoURL', 'startDate', 'endDate', 'totalPrice', 'status', 'createdAt'])"
+      }
+    },
+    "chats": {
+      "$chatId": {
+        ".read": "auth != null && data.child('members').child(auth.uid).exists()",
+        ".write": "auth != null && (data.exists() ? data.child('members').child(auth.uid).exists() : newData.child('members').child(auth.uid).exists())",
+         ".indexOn": ["bookingId", "suitId"],
+         "messages": {
+            ".write": "auth != null && root.child('chats/' + $chatId + '/members/' + auth.uid).exists()",
+            "$messageId": {
+                 ".validate": "newData.hasChildren(['senderId', 'text', 'timestamp'])"
+            }
+        }
       }
     }
   }

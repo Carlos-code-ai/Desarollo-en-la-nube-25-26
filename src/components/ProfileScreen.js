@@ -17,7 +17,7 @@ import MyRentalsPage from './MyRentalsPage.js';
 const ProfileHeader = ({ user, onLogout }) => {
     // ... (same as before)
     return (
-        <header className="relative flex justify-center items-center flex-col w-full text-center p-6 bg-surface-container-lowest">
+        <header className="relative flex justify-center items-center flex-col w-full text-center p-6 bg-surface-container-lowest pt-20">
             <motion.button 
                 onClick={onLogout} 
                 className="absolute top-4 right-4 p-2 rounded-full text-error" 

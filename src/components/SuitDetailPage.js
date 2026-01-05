@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { rtdb } from '../firebase.js'; // Use rtdb
+import { rtdb } from '../firebase.js';
 import { ref, onValue, push, query, orderByChild, equalTo, get, serverTimestamp, update } from 'firebase/database';
 import useAuth from '../hooks/useAuth.js';
 import { DayPicker } from 'react-day-picker';
@@ -15,14 +14,12 @@ const HeartIcon = ({ isFavorite, onToggle }) => {
     const isFirstRun = useRef(true);
 
     useEffect(() => {
-        // Set initial state without animation
         if (isFirstRun.current) {
             gsap.set(pathRef.current, { fill: isFavorite ? '#EF4444' : 'none', stroke: isFavorite ? '#dc2626' : 'white' });
             isFirstRun.current = false;
             return;
         }
 
-        // Animate on subsequent changes
         const tl = gsap.timeline();
         if (isFavorite) {
             tl.to(iconRef.current, { scale: 1.2, ease: 'power1.in', duration: 0.1 })
@@ -35,7 +32,6 @@ const HeartIcon = ({ isFavorite, onToggle }) => {
         }
     }, [isFavorite]);
 
-    // Stop propagation to prevent card click when favoriting
     const handleToggle = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -75,7 +71,7 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
   const [totalPrice, setTotalPrice] = useState(0);
 
   useEffect(() => {
-    const suitRef = ref(rtdb, `trajes/${suitId}`); // Use rtdb
+    const suitRef = ref(rtdb, `trajes/${suitId}`);
     setLoading(true);
 
     const unsubscribeSuit = onValue(suitRef, (snapshot) => {
@@ -84,7 +80,7 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
         const fullSuitData = { ...data, id: suitId };
         setSuit(fullSuitData);
 
-        const ownerRef = ref(rtdb, `users/${data.ownerId}`); // Use rtdb
+        const ownerRef = ref(rtdb, `users/${data.ownerId}`);
         onValue(ownerRef, (ownerSnapshot) => {
             const ownerData = ownerSnapshot.val();
             if (ownerData) {
@@ -105,7 +101,7 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
       setLoading(false);
     });
 
-    const bookingsRef = query(ref(rtdb, 'bookings'), orderByChild('suitId'), equalTo(suitId)); // Use rtdb
+    const bookingsRef = query(ref(rtdb, 'bookings'), orderByChild('suitId'), equalTo(suitId));
     const unsubscribeBookings = onValue(bookingsRef, (snapshot) => {
         const bookingsData = [];
         snapshot.forEach(childSnapshot => {
@@ -123,7 +119,8 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
     };
   }, [suitId]);
 
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
+
   const disabledDays = useMemo(() => {
       let disabled = [{ before: today }];
       bookings.forEach(booking => disabled.push({ from: booking.from, to: booking.to }));
@@ -150,25 +147,24 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
     try {
         const ownerId = suit.ownerId;
         const renterId = user.uid;
+        const memberKey = renterId < ownerId ? `${renterId}_${ownerId}` : `${ownerId}_${renterId}`;
 
-        const chatsRef = ref(rtdb, 'chats'); // Use rtdb
-        const q = query(chatsRef, orderByChild('suitId'), equalTo(suitId));
-        const snapshot = await get(q);
+        const chatsRef = ref(rtdb, 'chats');
+        const chatQuery = query(chatsRef, orderByChild('memberKey_suitId'), equalTo(`${memberKey}_${suitId}`));
+        const snapshot = await get(chatQuery);
         let existingChatId = null;
 
         if (snapshot.exists()) {
             const chats = snapshot.val();
             for (const chatId in chats) {
-                if (chats[chatId].members && chats[chatId].members[renterId] && chats[chatId].members[ownerId]) {
-                    existingChatId = chatId;
-                    break;
-                }
+                existingChatId = chatId;
+                break;
             }
         }
 
-        const rootRef = ref(rtdb); // Use rtdb
+        const rootRef = ref(rtdb);
         const updates = {};
-        const newBookingRef = push(ref(rtdb, 'bookings')); // Use rtdb
+        const newBookingRef = push(ref(rtdb, 'bookings'));
         let chatIdToNavigate = existingChatId;
 
         if (!existingChatId) {
@@ -176,6 +172,7 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
             chatIdToNavigate = newChatRef.key;
             const newChat = {
                 id: newChatRef.key,
+                memberKey_suitId: `${memberKey}_${suitId}`,
                 bookingId: newBookingRef.key,
                 suitId: suit.id,
                 suitName: suit.name,
@@ -189,6 +186,8 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
                 }
             };
             updates[`/chats/${newChatRef.key}`] = newChat;
+            updates[`/users/${ownerId}/chats/${newChatRef.key}`] = true;
+            updates[`/users/${renterId}/chats/${newChatRef.key}`] = true;
         }
         
         const newBooking = {

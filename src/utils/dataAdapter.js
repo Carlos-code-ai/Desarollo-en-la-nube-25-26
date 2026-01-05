@@ -15,14 +15,16 @@ export const adaptSuitData = (suit, id) => {
   const adaptedSuit = {
     id: id,
     name: suit.name || suit.nombre || 'Traje sin Nombre',
-    price: suit.price || suit.precio || 0,
+    price: suit.price || suit.precioDia || suit.precio || 0,
     size: suit.size || suit.talla || 'Talla Única',
-    imageUrls: suit.imageUrls || suit.fotos || suit.imagenes || (suit.imageUrl ? [suit.imageUrl] : []),
-    description: suit.description || '',
-    createdAt: suit.createdAt || 0,
+    imageUrls: suit.imagenes || (suit.imageUrl ? [suit.imageUrl] : suit.imageUrls || suit.fotos || []),
+    description: suit.description || suit.descripcion || '',
+    createdAt: suit.createdAt || suit.timestamp || 0,
     ownerId: suit.ownerId || suit.propietarioId || suit.usuario || null,
-    availability: suit.availability || [],
     location: suit.location || suit.ciudad || '',
+    // FIX: Recognize all common variations for availability: `availability`, `isAvailable`, `disponibilidad`
+    availability: suit.availability !== undefined ? suit.availability : (suit.isAvailable !== undefined ? suit.isAvailable : suit.disponibilidad),
+    ...suit, // Pass through any other fields to be safe
   };
 
   // --- Data Sanitization and Type Coercion ---
@@ -35,12 +37,9 @@ export const adaptSuitData = (suit, id) => {
     adaptedSuit.price = 0;
   }
 
-  // Ensure imageUrls is an array and has a placeholder if empty
-  if (!Array.isArray(adaptedSuit.imageUrls)) {
-      adaptedSuit.imageUrls = [];
-  }
-  if (adaptedSuit.imageUrls.length === 0) {
-      adaptedSuit.imageUrls.push('https://via.placeholder.com/400x500.png?text=Sin+Imagen');
+  // Ensure imageUrls is an array. If it's empty after trying all sources, add a placeholder.
+  if (!Array.isArray(adaptedSuit.imageUrls) || adaptedSuit.imageUrls.length === 0) {
+      adaptedSuit.imageUrls = ['https://via.placeholder.com/400x500.png?text=Sin+Imagen'];
   }
 
   return adaptedSuit;

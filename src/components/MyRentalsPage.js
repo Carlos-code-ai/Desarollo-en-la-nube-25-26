@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth.js';
-import useRealtimeDB from '../hooks/useRealtimeDB.js';
+import { rtdb } from '../firebase.js';
+import { ref, query, orderByChild, equalTo, onValue } from 'firebase/database';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -10,8 +11,7 @@ const RentalCard = ({ rental }) => {
   const { user } = useAuth();
   const { suitName, suitImageUrl, startDate, endDate, totalPrice, status, renterName, renterPhotoURL, chatId, ownerId } = rental;
 
-  // Robust check for owner view, comparing against UID and potentially legacy displayName
-  const isOwnerView = user && (user.uid === ownerId || user.displayName === ownerId);
+  const isOwnerView = user && user.uid === ownerId;
   const handleGoToChat = () => navigate(`/messages/${chatId}`);
 
   const getStatusChipStyle = (status) => {
@@ -60,21 +60,75 @@ const EmptyState = ({ message }) => (
   </div>
 );
 
+// Custom hook to fetch bookings for a user
+const useUserBookings = (userId) => {
+    const [bookings, setBookings] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (!userId) {
+            setLoading(false);
+            setBookings([]);
+            return;
+        }
+
+        setLoading(true);
+
+        const bookingsRef = ref(rtdb, 'bookings');
+        const receivedQuery = query(bookingsRef, orderByChild('ownerId'), equalTo(userId));
+        const madeQuery = query(bookingsRef, orderByChild('renterId'), equalTo(userId));
+
+        let receivedBookings = {};
+        let madeBookings = {};
+        let listeners = [];
+
+        const onData = (snapshot, target) => {
+            const data = snapshot.val() || {};
+             Object.keys(data).forEach(key => {
+                const booking = { id: key, ...data[key] };
+                if (target === 'received') receivedBookings[key] = booking;
+                if (target === 'made') madeBookings[key] = booking;
+            });
+        };
+        
+        const receivedListener = onValue(receivedQuery, (snap) => onData(snap, 'received'), (err) => setError(err));
+        const madeListener = onValue(madeQuery, (snap) => onData(snap, 'made'), (err) => setError(err));
+        
+        // Combine results after a short delay to allow both queries to complete
+        const timer = setTimeout(() => {
+            const all = { ...receivedBookings, ...madeBookings }; // Merge results
+            const allBookings = Object.values(all).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            setBookings(allBookings);
+            setLoading(false);
+        }, 500); // Adjust delay if needed
+
+        listeners.push(receivedListener, madeListener);
+
+        return () => {
+            clearTimeout(timer);
+            listeners.forEach(l => l());
+        };
+
+    }, [userId]);
+
+    return { bookings, loading, error };
+}
+
 const MyRentalsPage = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('received'); // 'received' or 'made'
 
-  const { docs: allBookings, loading, error } = useRealtimeDB('bookings');
+  const { bookings: allBookings, loading, error } = useUserBookings(user?.uid);
 
-  // Apply robust filtering for backward compatibility.
   const receivedRequests = useMemo(() => {
     if (!user) return [];
-    return allBookings.filter(booking => booking.ownerId === user.uid || (user.displayName && booking.ownerId === user.displayName));
+    return allBookings.filter(booking => booking.ownerId === user.uid);
   }, [allBookings, user]);
 
   const myRentals = useMemo(() => {
     if (!user) return [];
-    return allBookings.filter(booking => booking.renterId === user.uid || (user.displayName && booking.renterId === user.displayName));
+    return allBookings.filter(booking => booking.renterId === user.uid);
   }, [allBookings, user]);
 
   const TabButton = ({ label, tabName }) => (

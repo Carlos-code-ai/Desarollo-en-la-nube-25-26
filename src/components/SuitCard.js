@@ -4,14 +4,18 @@ import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 
 // --- Placeholder Image ---
-// Using an inline SVG to avoid external network requests and CSP issues.
 const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNnB4IiBmaWxsPSIjY2NjIj5TaW4gSW1hZ2VuPC90ZXh0Pjwvc3ZnPg==";
 
 // --- SuitCard Component ---
 const SuitCard = ({ suit }) => {
-    const { id, name, price, size, imageUrls, availability } = suit;
-    const isRented = availability && availability.includes('rented');
+    // FIX: Destructure with default values to prevent crash if suit is malformed
+    const { id, name = 'Traje sin Nombre', price = 0, size = 'N/A', imageUrls = [], availability } = suit || {};
     const cardRef = useRef(null);
+
+    // --- Robust Availability Check ---
+    // A suit is considered rented only if availability is the exact string "rented".
+    // It is safe for availability to be a boolean (true/false), an object, undefined, or another string.
+    const isRented = typeof availability === 'string' && availability.toLowerCase() === 'rented';
 
     const handleMouseEnter = () => {
         gsap.to(cardRef.current, { y: -8, scale: 1.03, duration: 0.3, ease: 'power2.out' });
@@ -24,6 +28,9 @@ const SuitCard = ({ suit }) => {
     // Use the first available image or the inline SVG placeholder
     const displayImage = imageUrls?.[0] || placeholderImage;
 
+    // Do not render the card if essential data is missing
+    if (!id) return null;
+
     return (
         <Link
             to={`/suit/${id}`}
@@ -33,7 +40,7 @@ const SuitCard = ({ suit }) => {
             style={{ willChange: 'transform' }}
         >
             <div ref={cardRef} className="relative flex flex-col h-full">
-                <div className="relative w-full aspect-[3/4] overflow-hidden">
+                <div className="relative w-full aspect-[4/5] overflow-hidden">
                     <img src={displayImage} alt={name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                     {isRented && <div className="absolute top-3 left-3 bg-error text-on-error px-2.5 py-1 text-xs font-bold rounded-full z-10">ALQUILADO</div>}
@@ -55,7 +62,7 @@ const SuitCard = ({ suit }) => {
 // --- Skeleton Loader for SuitCard ---
 const SuitCardSkeleton = () => (
     <div className="relative rounded-2xl overflow-hidden shadow-lg bg-surface-container-high">
-        <div className="relative w-full aspect-[3/4] overflow-hidden bg-surface-container-highest animate-pulse"></div>
+        <div className="relative w-full aspect-[4/5] overflow-hidden bg-surface-container-highest animate-pulse"></div>
         <div className="p-4">
             <div className="h-5 bg-surface-container-highest rounded w-3/4 mb-2 animate-pulse"></div>
             <div className="h-4 bg-surface-container-highest rounded w-1/2 animate-pulse"></div>
@@ -63,7 +70,6 @@ const SuitCardSkeleton = () => (
     </div>
 );
 
-// Attach the Skeleton as a static property to the main component
 SuitCard.Skeleton = SuitCardSkeleton;
 
 export default SuitCard;

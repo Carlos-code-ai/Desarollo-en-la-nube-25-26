@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const FloatingActionButton = () => {
     const navigate = useNavigate();
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
 
     const handleClick = () => {
         navigate('/add-suit');
@@ -31,6 +32,8 @@ const FloatingActionButton = () => {
             animate={{ scale: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.5 }}
             style={{ overflow: 'hidden' }} // Prevents content from spilling out during animation
+            onHoverStart={() => setIsHovered(true)}
+            onHoverEnd={() => setIsHovered(false)}
         >
             <AnimatePresence mode="wait">
                 <motion.div
@@ -42,10 +45,22 @@ const FloatingActionButton = () => {
                     transition={{ duration: 0.25 }}
                 >
                     {isScrolled ? (
-                        <span className="material-icons text-3xl">add</span>
+                        <motion.span 
+                            className="material-icons text-3xl"
+                            animate={{ rotate: isHovered ? 90 : 0 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            add
+                        </motion.span>
                     ) : (
                         <div className="flex items-center gap-2">
-                            <span className="material-icons">add</span>
+                            <motion.span 
+                                className="material-icons"
+                                animate={{ rotate: isHovered ? 90 : 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                add
+                            </motion.span>
                             <span className="font-semibold whitespace-nowrap">Añadir traje</span>
                         </div>
                     )}

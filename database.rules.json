@@ -8,17 +8,18 @@
     },
     "trajes": {
       ".read": true,
-      ".indexOn": ["ownerId"],
+      ".indexOn": ["ownerId", "size", "price", "state", "eventType"],
       "$suitId": {
         ".write": "auth != null && (newData.child('ownerId').val() === auth.uid || !data.exists())",
         ".validate": "newData.hasChildren(['name', 'size', 'price', 'description', 'imageUrl', 'ownerId', 'ownerName', 'ownerPhotoURL', 'state', 'eventType'])"
       }
     },
     "bookings": {
-      ".read": "auth != null && (data.child('ownerId').val() === auth.uid || data.child('renterId').val() === auth.uid)",
-      ".indexOn": ["suitId", "renterId", "ownerId"], 
+      ".read": "auth != null",
+      ".indexOn": ["suitId", "ownerId", "renterId"],
       "$bookingId": {
-        ".write": "auth != null",
+        ".read": "auth != null && (data.child('ownerId').val() === auth.uid || data.child('renterId').val() === auth.uid)",
+        ".write": "auth != null && (newData.child('renterId').val() === auth.uid || newData.child('ownerId').val() === auth.uid)",
         ".validate": "newData.hasChildren(['suitId', 'suitName', 'suitImageUrl', 'ownerId', 'renterId', 'renterName', 'renterPhotoURL', 'startDate', 'endDate', 'totalPrice', 'status', 'createdAt'])"
       }
     },

@@ -13,7 +13,7 @@
     "@popperjs/core": "^2.11.8",
     "ajv": "^8.17.1",
     "date-fns": "^4.1.0",
-    "firebase": "^12.7.0",
+    "firebase": "10.12.2",
     "firebase-admin": "^13.6.0",
     "framer-motion": "^12.23.26",
     "gsap": "^3.14.2",

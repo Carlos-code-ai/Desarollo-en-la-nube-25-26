@@ -1,13 +1,19 @@
 import React, { useMemo } from 'react';
 import useRealtimeDB from '../hooks/useRealtimeDB.js';
-import SuitCard from './SuitCard.js'; // CORRECTED IMPORT
+import SuitCard from './SuitCard.js';
 import useSuitAnimations from '../hooks/useSuitAnimations.js';
+import useFavorites from '../hooks/useFavorites.js'; // 1. Importar el hook clave
 
-const MyFavoritesPage = ({ favorites, onSuitSelect, onToggleFavorite }) => {
+// 2. El componente ya no acepta props relacionados con favoritos
+const MyFavoritesPage = () => {
   const { docs: allSuits, loading, error } = useRealtimeDB('trajes');
   const { containerRef } = useSuitAnimations();
+  
+  // 3. Obtenemos los favoritos directamente desde el hook
+  const { favorites } = useFavorites();
 
   const favoriteSuits = useMemo(() => {
+    // La lógica de filtrado ahora usa la variable `favorites` del hook
     if (!favorites || allSuits.length === 0) {
       return [];
     }
@@ -17,8 +23,8 @@ const MyFavoritesPage = ({ favorites, onSuitSelect, onToggleFavorite }) => {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[...Array(3)].map((_, index) => <SuitCard.Skeleton key={index} />) /* CORRECTED USAGE */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {[...Array(3)].map((_, index) => <SuitCard.Skeleton key={index} />)}
         </div>
       );
     }
@@ -37,14 +43,12 @@ const MyFavoritesPage = ({ favorites, onSuitSelect, onToggleFavorite }) => {
     }
 
     return (
-      <div ref={containerRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div ref={containerRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {favoriteSuits.map(suit => (
+          // 4. SuitCard se llama de forma limpia, sin props de favoritos
           <SuitCard 
             key={suit.id} 
             suit={suit} 
-            onSelect={onSuitSelect} 
-            isFavorite={true} // Siempre es favorito en esta página
-            onToggleFavorite={onToggleFavorite} 
           />
         ))}
       </div>
@@ -53,6 +57,7 @@ const MyFavoritesPage = ({ favorites, onSuitSelect, onToggleFavorite }) => {
 
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col space-y-8 px-4 sm:px-6 lg:px-8 py-8">
+       <h1 className="text-3xl font-bold text-on-surface">Mis Favoritos</h1>
       <div className="min-h-[400px]">
         {renderContent()}
       </div>

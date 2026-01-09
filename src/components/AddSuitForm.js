@@ -8,6 +8,9 @@ const HangerIcon = (props) => <svg {...props} viewBox="0 0 24 24" fill="none" st
 const UploadIcon = (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
 const LinkIcon = (props) => <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.72"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.72"/></svg>;
 
+// --- Placeholder Image ---
+const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNnB4IiBmaWxsPSIjY2NjIj5TaW4gSW1hZ2VuPC90ZXh0Pjwvc3ZnPg==";
+
 // --- Form Field Components ---
 const InputField = ({ label, name, value, onChange, placeholder, type = 'text', required = true }) => (
     <div>
@@ -96,7 +99,12 @@ const ImageUploader = ({ images, setImages }) => {
             <div className="grid grid-cols-3 gap-3 pt-2">
                 {images.map((img, i) => (
                     <motion.div key={i} className="relative group aspect-square" layout initial={{ scale: 0.8 }} animate={{ scale: 1 }}>
-                        <img src={img} alt={`preview ${i}`} className="w-full h-full object-cover rounded-lg"/>
+                        <img 
+                            src={img} 
+                            alt={`preview ${i}`} 
+                            className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => { e.target.onerror = null; e.target.src=placeholderImage; }}
+                        />
                         <button type="button" onClick={() => removeImage(i)} className="absolute top-1 right-1 h-6 w-6 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>
                     </motion.div>
                 ))}

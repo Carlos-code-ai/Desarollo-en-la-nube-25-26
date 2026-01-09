@@ -1,43 +1,51 @@
 {
   "rules": {
     "users": {
-      ".read": true, // Be cautious with this, consider more restrictive rules
       "$uid": {
-        ".write": "$uid === auth.uid",
-        "favorites": {
-          ".read": "$uid === auth.uid",
-          ".write": "$uid === auth.uid"
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid",
+        "chats": {
+          ".write": "auth != null"
         }
       }
     },
     "trajes": {
       ".read": true,
-      ".indexOn": ["ownerId", "lowercasedName"],
-      "$trajeId": {
-        ".write": "auth != null && (data.exists() ? data.child('ownerId').val() === auth.uid : newData.child('ownerId').val() === auth.uid)",
-        ".validate": "newData.hasChildren(['name', 'description', 'price', 'imageUrl', 'ownerId', 'size', 'condition', 'eventType'])"
+      ".indexOn": ["ownerId", "size", "price", "state", "eventType"],
+      "$suitId": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['name', 'size', 'price', 'description', 'imageUrl', 'ownerId', 'ownerName', 'ownerPhotoURL', 'state', 'eventType'])"
       }
     },
     "bookings": {
-      ".indexOn": ["ownerId", "renterId"],
+      ".read": "auth != null",
+      ".indexOn": ["suitId", "ownerId", "renterId"],
       "$bookingId": {
-        ".read": "auth != null && (data.child('ownerId').val() === auth.uid || data.child('renterId').val() === auth.uid)",
-        ".write": "auth != null && (newData.child('renterId').val() === auth.uid || newData.child('ownerId').val() === auth.uid)",
-        ".validate": "newData.hasChildren(['chatId', 'suitId', 'suitName', 'suitImageUrl', 'ownerId', 'renterId', 'renterName', 'renterPhotoURL', 'startDate', 'endDate', 'totalPrice', 'status', 'createdAt'])"
+        ".read": "auth != null",
+        ".write": "auth != null"
       }
     },
     "chats": {
+      ".read": "auth != null",
+      ".indexOn": ["suitId", "timestamp", "memberKey_suitId"],
       "$chatId": {
-        ".read": "auth != null && data.child('members').child(auth.uid).exists()",
-        ".write": "auth != null && (data.exists() ? data.child('members').child(auth.uid).exists() : newData.child('members').child(auth.uid).exists())",
-         ".indexOn": ["bookingId", "suitId"],
-         "messages": {
-            ".write": "auth != null && root.child('chats/' + $chatId + '/members/' + auth.uid).exists()",
-            "$messageId": {
-                 ".validate": "newData.hasChildren(['senderId', 'text', 'timestamp'])"
-            }
-        }
+        ".read": "data.child('members').child(auth.uid).exists()",
+        ".write": "auth != null && (newData.child('members').child(auth.uid).exists() || !data.exists())",
+        ".validate": "newData.hasChildren(['id', 'suitId', 'lastMessage', 'timestamp', 'members', 'participantInfo'])"
       }
+    },
+    "messages": {
+      "$chatId": {
+        ".read": "auth != null && root.child('chats/' + $chatId + '/members/' + auth.uid).exists()",
+        ".write": "auth != null && root.child('chats/' + $chatId + '/members/' + auth.uid).exists()",
+        ".indexOn": "timestamp"
+      }
+    },
+    "favorites": {
+        "$userId": {
+          ".read": "auth.uid === $userId",
+          ".write": "auth.uid === $userId"
+        }
     }
   }
 }

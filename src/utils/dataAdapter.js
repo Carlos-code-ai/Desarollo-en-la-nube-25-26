@@ -1,46 +1,61 @@
+// ../utils/dataAdapter.js
 
-/**
- * Adapts raw suit data from Firebase to a consistent, predictable object structure
- * that the rest of the application can reliably use.
- * This prevents crashes and visual bugs from inconsistent field names.
- *
- * @param {object} suit - The raw suit object from Firebase.
- * @param {string} id - The Firebase key for the suit, used as its ID.
- * @returns {object|null} A standardized suit object or null if the input is invalid.
- */
-export const adaptSuitData = (suit, id) => {
-  if (!suit || typeof suit !== 'object') return null;
+const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNnB4IiBmaWxsPSIjY2NjIj5TaW4gSW1hZ2VuPC90ZXh0Pjwvc3ZnPg==";
 
-  // --- Base Structure ---
-  const adaptedSuit = {
-    id: id,
-    name: suit.name || suit.nombre || 'Traje sin Nombre',
-    price: suit.price || suit.precioDia || suit.precio || 0,
-    size: suit.size || suit.talla || 'Talla Única',
-    imageUrls: suit.imagenes || (suit.imageUrl ? [suit.imageUrl] : suit.imageUrls || suit.fotos || []),
-    description: suit.description || suit.descripcion || '',
-    createdAt: suit.createdAt || suit.timestamp || 0,
-    ownerId: suit.ownerId || suit.propietarioId || suit.usuario || null,
-    location: suit.location || suit.ciudad || '',
-    // FIX: Recognize all common variations for availability: `availability`, `isAvailable`, `disponibilidad`
-    availability: suit.availability !== undefined ? suit.availability : (suit.isAvailable !== undefined ? suit.isAvailable : suit.disponibilidad),
-    ...suit, // Pass through any other fields to be safe
+const toFirebaseStorageUrl = (fileName) => {
+  if (!fileName || typeof fileName !== 'string' || fileName.startsWith('http')) {
+    return fileName;
+  }
+  const bucket = "desarollogit-68916509-89c54.appspot.com";
+  return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/images%2F${encodeURIComponent(fileName)}?alt=media`;
+};
+
+export const adaptSuitData = (suitData, suitId) => {
+  if (!suitData || typeof suitData !== 'object') return null;
+
+  let rawImageSources = [];
+  if (Array.isArray(suitData.fotos) && suitData.fotos.length > 0) rawImageSources = suitData.fotos;
+  else if (Array.isArray(suitData.imagenes) && suitData.imagenes.length > 0) rawImageSources = suitData.imagenes;
+  else if (Array.isArray(suitData.imageUrls) && suitData.imageUrls.length > 0) rawImageSources = suitData.imageUrls;
+  else if (typeof suitData.imageUrl === 'string' && suitData.imageUrl) rawImageSources = [suitData.imageUrl];
+  else if (typeof suitData.foto === 'string' && suitData.foto) rawImageSources = [suitData.foto];
+
+  const processedImageUrls = rawImageSources
+    .map(src => toFirebaseStorageUrl(src))
+    .filter(Boolean);
+
+  const finalImageUrls = processedImageUrls.length > 0
+    ? processedImageUrls
+    : [placeholderImage];
+
+  const mainImageUrl = finalImageUrls[0];
+
+  let priceNum = 0;
+  if (suitData.precio !== undefined) priceNum = Number(suitData.precio);
+  else if (suitData.price !== undefined) priceNum = Number(suitData.price);
+  if (typeof priceNum === 'string') priceNum = parseFloat(priceNum.replace(',', '.'));
+  if (!Number.isFinite(priceNum)) priceNum = 0;
+
+  const name = suitData.nombre || suitData.name || suitData.titulo || 'Traje sin Nombre';
+  const size = suitData.talla || suitData.size || 'Talla Única';
+
+  const adapted = {
+    name: name,
+    price: priceNum,
+    imageUrl: mainImageUrl, 
+    imageUrls: finalImageUrls, 
+    createdAt: suitData.createdAt || suitData.timestamp || null,
+    suitName: name,
+    totalPrice: priceNum,
+    suitImageUrl: mainImageUrl,
+    description: suitData.descripcion || suitData.description || '',
+    size: size,
+    availability: suitData.disponibilidad !== undefined ? suitData.disponibilidad : true,
+    ownerId: suitData.propietarioId || suitData.usuario || suitData.ownerId || null,
+    brand: suitData.marca || '',
+    location: suitData.ciudad || suitData.location || '',
   };
 
-  // --- Data Sanitization and Type Coercion ---
-
-  // Ensure price is a clean number
-  if (typeof adaptedSuit.price === 'string') {
-    adaptedSuit.price = parseFloat(adaptedSuit.price.replace(',', '.').trim());
-  }
-  if (isNaN(adaptedSuit.price)) {
-    adaptedSuit.price = 0;
-  }
-
-  // Ensure imageUrls is an array. If it's empty after trying all sources, add a placeholder.
-  if (!Array.isArray(adaptedSuit.imageUrls) || adaptedSuit.imageUrls.length === 0) {
-      adaptedSuit.imageUrls = ['https://via.placeholder.com/400x500.png?text=Sin+Imagen'];
-  }
-
-  return adaptedSuit;
+  // Ensure the ID is always attached
+  return { ...adapted, id: suitId };
 };

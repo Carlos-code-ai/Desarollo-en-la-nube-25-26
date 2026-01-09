@@ -1,63 +1,29 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { rtdb } from '../firebase.js';
 import { ref, onValue, push, query, orderByChild, equalTo, get, serverTimestamp, update } from 'firebase/database';
 import useAuth from '../hooks/useAuth.js';
+import HeartIcon from './HeartIcon';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { es } from 'date-fns/locale';
-import { gsap } from 'gsap';
 
-const HeartIcon = ({ isFavorite, onToggle }) => {
-    const iconRef = useRef(null);
-    const pathRef = useRef(null);
-    const isFirstRun = useRef(true);
-
-    useEffect(() => {
-        if (isFirstRun.current) {
-            gsap.set(pathRef.current, { fill: isFavorite ? '#EF4444' : 'none', stroke: isFavorite ? '#dc2626' : 'white' });
-            isFirstRun.current = false;
-            return;
-        }
-
-        const tl = gsap.timeline();
-        if (isFavorite) {
-            tl.to(iconRef.current, { scale: 1.2, ease: 'power1.in', duration: 0.1 })
-              .set(pathRef.current, { fill: '#EF4444', stroke: '#dc2626' })
-              .to(iconRef.current, { scale: 1, ease: 'elastic.out(1, 0.4)', duration: 0.4 });
-        } else {
-            tl.to(iconRef.current, { scale: 0.8, ease: 'power1.in', duration: 0.1 })
-              .set(pathRef.current, { fill: 'none', stroke: 'white' })
-              .to(iconRef.current, { scale: 1, ease: 'power1.out', duration: 0.1 });
-        }
-    }, [isFavorite]);
-
-    const handleToggle = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onToggle();
-    };
-
-    return (
-        <button onClick={handleToggle} className="absolute top-4 right-4 h-10 w-10 grid place-items-center bg-black/50 backdrop-blur-sm rounded-full cursor-pointer z-20 focus:outline-none">
-            <div ref={iconRef}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={1.5} className={'w-6 h-6'}>
-                    <path ref={pathRef} strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                </svg>
-            </div>
-        </button>
-    );
-};
+const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjUwMCIgZmlsbD0iI2YwZjBmMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNnB4IiBmaWxsPSIjY2NjIj5TaW4gSW1hZ2VuPC90ZXh0Pjwvc3ZnPg==";
+const avatarPlaceholder = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
 
 const DetailItem = ({ iconName, title, value }) => (
-    <div className="flex flex-col items-center text-center p-3 bg-surface-container rounded-2xl">
-        <span className="material-icons text-primary mb-1">{iconName}</span>
-        <p className="text-xs text-on-surface-variant font-medium">{title}</p>
-        <p className="text-sm font-semibold text-on-surface mt-0.5">{value}</p>
+    <div className="flex items-start text-left p-3 bg-surface-container rounded-2xl">
+        <span className="material-icons-outlined text-primary mt-0.5">{iconName}</span>
+        <div className="ml-3">
+            <p className="text-sm text-on-surface-variant font-medium">{title}</p>
+            <p className="text-base font-semibold text-on-surface">{value}</p>
+        </div>
     </div>
 );
 
-const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
+const SuitDetailPage = () => {
+  const { suitId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [suit, setSuit] = useState(null);
@@ -166,6 +132,9 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
         const updates = {};
         const newBookingRef = push(ref(rtdb, 'bookings'));
         let chatIdToNavigate = existingChatId;
+        
+        const safeRenterName = user.displayName || "Usuario";
+        const safeOwnerName = owner.displayName || "Propietario";
 
         if (!existingChatId) {
             const newChatRef = push(chatsRef);
@@ -176,13 +145,13 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
                 bookingId: newBookingRef.key,
                 suitId: suit.id,
                 suitName: suit.name,
-                suitImageUrl: suit.imageUrl,
+                suitImageUrl: suit.imageUrl || placeholderImage,
                 lastMessage: 'Solicitud de alquiler enviada.',
                 timestamp: serverTimestamp(),
                 members: { [ownerId]: true, [renterId]: true },
                 participantInfo: {
-                    [ownerId]: { name: owner.displayName, photo: owner.photoURL },
-                    [renterId]: { name: user.displayName, photo: user.photoURL }
+                    [ownerId]: { name: safeOwnerName, photo: owner.photoURL || avatarPlaceholder(safeOwnerName) },
+                    [renterId]: { name: safeRenterName, photo: user.photoURL || avatarPlaceholder(safeRenterName) }
                 }
             };
             updates[`/chats/${newChatRef.key}`] = newChat;
@@ -195,11 +164,11 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
             chatId: chatIdToNavigate,
             suitId: suit.id,
             suitName: suit.name,
-            suitImageUrl: suit.imageUrl,
+            suitImageUrl: suit.imageUrl || placeholderImage,
             ownerId: ownerId,
             renterId: renterId,
-            renterName: user.displayName,
-            renterPhotoURL: user.photoURL,
+            renterName: safeRenterName,
+            renterPhotoURL: user.photoURL || avatarPlaceholder(safeRenterName),
             startDate: dateRange.from.toISOString(),
             endDate: dateRange.to.toISOString(),
             totalPrice: totalPrice,
@@ -221,28 +190,37 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
 
   const capitalize = (str) => str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 
-  const fullSuitData = suit && owner ? { ...suit, ownerName: owner.displayName, ownerPhotoURL: owner.photoURL } : null;
+  const fullSuitData = suit && owner ? { ...suit, ownerName: owner.displayName || "Propietario", ownerPhotoURL: owner.photoURL } : null;
+
+  if (loading) return <div className="w-full h-screen grid place-items-center"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div></div>;
 
   return (
-    <div className="animate-fade-in">
-      {loading && <div className="w-full h-screen grid place-items-center"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div></div>}
+    <div className="animate-fade-in max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {error && <p className="text-center text-error font-medium py-10">{error}</p>}
       {fullSuitData && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 md:gap-x-12 lg:gap-x-16">
-            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-surface-container shadow-lg">
-                <button onClick={onBack} className="absolute top-4 left-4 z-20 h-10 w-10 grid place-items-center bg-background/70 backdrop-blur-sm rounded-full cursor-pointer transition-colors" aria-label="Volver">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-x-12 lg:gap-x-16">
+          
+          {/* Columna de la Imagen (más grande) */}
+          <div className="lg:col-span-3">
+            <div className="relative aspect-[4/5] rounded-3xl overflow-hidden bg-surface-container shadow-xl sticky top-24">
+                <button onClick={() => navigate(-1)} className="absolute top-4 left-4 z-20 h-11 w-11 grid place-items-center bg-background/60 backdrop-blur-sm rounded-full cursor-pointer transition-all hover:bg-background/80" aria-label="Volver">
                     <span className="material-icons text-on-surface">arrow_back</span>
                 </button>
-                <img src={fullSuitData.imageUrl} alt={fullSuitData.name} className="w-full h-full object-cover" />
-                <HeartIcon isFavorite={favorites.has(fullSuitData.id)} onToggle={() => onToggleFavorite(fullSuitData.id)} />
+                <img 
+                  src={fullSuitData.imageUrl || placeholderImage}
+                  alt={fullSuitData.name} 
+                  className="w-full h-full object-cover" 
+                  onError={(e) => { e.target.onerror = null; e.target.src=placeholderImage; }}
+                />
+                <HeartIcon suitId={fullSuitData.id} />
                 
                 {fullSuitData.ownerId && (
                     <Link to={`/user/${fullSuitData.ownerId}`} className="absolute bottom-4 left-4 z-10 group flex items-center space-x-3">
                         <img
-                            src={fullSuitData.ownerPhotoURL}
+                            src={fullSuitData.ownerPhotoURL || avatarPlaceholder(fullSuitData.ownerName)}
                             alt={fullSuitData.ownerName}
                             className="h-12 w-12 rounded-full object-cover border-2 border-white/80 shadow-lg transition-transform transform group-hover:scale-110 duration-300 ease-in-out"
+                            onError={(e) => { e.target.onerror = null; e.target.src=avatarPlaceholder(fullSuitData.ownerName); }}
                         />
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 text-white text-xs px-2 py-1 rounded-md absolute left-16 whitespace-nowrap">
                             Ver perfil de {fullSuitData.ownerName}
@@ -250,48 +228,64 @@ const SuitDetailPage = ({ suitId, onBack, favorites, onToggleFavorite }) => {
                     </Link>
                 )}
             </div>
+          </div>
 
-            <div className="mt-8 md:mt-0">
-              <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-on-surface">{fullSuitData.name}</h1>
-              <div className="mt-4"><p className="text-on-surface-variant leading-relaxed">{fullSuitData.description}</p></div>
-              
-              <div className="mt-6 p-4 sm:p-6 bg-surface-container rounded-2xl">
+          {/* Columna de Información (más estrecha) */}
+          <div className="lg:col-span-2 mt-8 lg:mt-0 flex flex-col space-y-8">
+              {/* --- SECCIÓN 1: Título y Marca --- */}
+              <div>
+                  <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-on-surface">{fullSuitData.name}</h1>
+                  {fullSuitData.brand && (
+                      <p className="text-xl text-on-surface-variant mt-1">por {fullSuitData.brand}</p>
+                  )}
+              </div>
+
+              {/* --- SECCIÓN 2: Detalles del Traje --- */}
+              <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold text-on-surface">Características</h2>
+                  <div className="grid grid-cols-2 gap-4">
+                      {fullSuitData.size && <DetailItem iconName="straighten" title="Talla" value={fullSuitData.size.toUpperCase()} />}
+                      {fullSuitData.colors && <DetailItem iconName="palette" title="Color" value={capitalize(fullSuitData.colors)} />}
+                      {fullSuitData.eventType && <DetailItem iconName="celebration" title="Evento Ideal" value={capitalize(fullSuitData.eventType)} />}
+                      {fullSuitData.condition && <DetailItem iconName="verified" title="Condición" value={capitalize(fullSuitData.condition)} />}
+                  </div>
+              </div>
+
+              {/* --- SECCIÓN 3: Descripción --- */}
+              {fullSuitData.description && (
+                  <div className="space-y-4">
+                      <h2 className="text-2xl font-semibold text-on-surface">Sobre este traje</h2>
+                      <div className="prose prose-lg text-on-surface-variant leading-relaxed">
+                          <p>{fullSuitData.description}</p>
+                      </div>
+                  </div>
+              )}
+
+              {/* --- SECCIÓN 4: Alquiler --- */}
+              <div className="p-5 bg-surface-container rounded-3xl shadow-lg">
                   <div className="flex justify-between items-center">
-                       <h2 className="text-xl font-bold text-on-surface">Alquilar</h2>
-                       <p className="text-2xl font-bold text-primary">{fullSuitData.price}€<span className="text-sm font-normal text-on-surface-variant">/día</span></p>
+                       <h2 className="text-2xl font-bold text-on-surface">Alquilar</h2>
+                       <p className="text-3xl font-bold text-primary">{fullSuitData.price}€<span className="text-base font-normal text-on-surface-variant">/día</span></p>
                   </div>
-
                   <div className="flex justify-center mt-4">
-                      <DayPicker mode="range" locale={es} selected={dateRange} onSelect={setDateRange} disabled={disabledDays} numberOfMonths={1} styles={{ root: { width: '100%', border: 'none' }, caption_label: { color: 'var(--color-primary)'}, day: { color: 'var(--color-on-surface)'}, day_selected: { backgroundColor: 'var(--color-primary)', color: 'var(--color-on-primary)'}, day_disabled: { opacity: 0.3 } }} />
+                      <DayPicker mode="range" locale={es} selected={dateRange} onSelect={setDateRange} disabled={disabledDays} numberOfMonths={1} className="w-full" classNames={{ caption_label: 'text-primary font-semibold', day: 'text-on-surface', day_selected: '!bg-primary !text-on-primary', day_disabled: 'opacity-30'}} />
                   </div>
-                  
                    {totalPrice > 0 && 
-                     <div className="mt-2 p-3 bg-primary/10 rounded-xl text-center">
-                       <p className="text-sm text-on-surface-variant">Precio total estimado:</p>
-                       <p className="text-xl font-bold text-primary">{totalPrice.toFixed(2)}€</p>
+                     <div className="mt-4 p-3 bg-primary/10 rounded-xl text-center">
+                       <p className="text-md text-on-surface-variant">Precio total estimado:</p>
+                       <p className="text-2xl font-bold text-primary">{totalPrice.toFixed(2)}€</p>
                      </div>
                    }
               </div>
 
-              <div className="mt-6 flex flex-col gap-4">
-                  <button onClick={handleRentalRequest} disabled={!dateRange.from || !dateRange.to || submitting} className="w-full h-12 rounded-full bg-primary text-on-primary font-bold hover:bg-primary-dark transition-all disabled:bg-on-surface/10 disabled:text-on-surface/50 disabled:cursor-not-allowed">
-                      {submitting ? 'Enviando Solicitud...' : 'Solicitar Alquiler y Chatear'}
+              {/* --- SECCIÓN 5: Botón de Acción --- */}
+              <div className="pt-2">
+                  <button onClick={handleRentalRequest} disabled={!dateRange.from || !dateRange.to || submitting} className="w-full h-14 rounded-full bg-primary text-on-primary font-bold text-lg hover:bg-primary/90 transition-all disabled:bg-on-surface/10 disabled:text-on-surface/50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl">
+                      {submitting ? 'Enviando...' : 'Solicitar Alquiler y Chatear'}
                   </button>
               </div>
-            </div>
           </div>
-
-          <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-outline/20">
-               <div className="max-w-5xl mx-auto">
-                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                     {fullSuitData.size && <DetailItem iconName="straighten" title="Talla" value={fullSuitData.size} />}
-                     {fullSuitData.eventType && <DetailItem iconName="celebration" title="Evento" value={capitalize(fullSuitData.eventType)} />}
-                     {fullSuitData.condition && <DetailItem iconName="verified" title="Condición" value={capitalize(fullSuitData.condition)} />}
-                     {fullSuitData.colors && <DetailItem iconName="palette" title="Color" value={capitalize(fullSuitData.colors)} />}
-                 </div>
-              </div>
-          </div>
-        </>
+        </div>
       )}
     </div>
   );

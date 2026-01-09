@@ -28,17 +28,14 @@ const VideoBackground = () => {
         players.forEach((player, index) => {
             if (player) {
                 player.addEventListener('ended', () => playNext(index));
+                // Set initial opacity for animation
+                gsap.set(player, { opacity: index === 0 ? 1 : 0 });
             }
         });
 
         // Start the first video
-        players.forEach((player, index) => {
-            if (player) {
-                gsap.to(player, { opacity: index === 0 ? 1 : 0, duration: 0 });
-            }
-        });
         if (players[0]) {
-            players[0].play();
+            players[0].play().catch(error => console.error("Video autoplay was prevented:", error));
         }
 
         return () => {
@@ -51,9 +48,9 @@ const VideoBackground = () => {
     }, [videoRefs, videos.length]);
 
     return (
-        <div className="absolute top-0 left-0 w-full h-full -z-10 overflow-hidden bg-black">
+        <div className="absolute top-0 left-0 w-full h-full -z-1 overflow-hidden bg-black">
             {videos.map((src, index) => (
-                <video key={src} ref={videoRefs[index]} src={src} muted playsInline className="absolute top-0 left-0 w-full h-full object-cover opacity-0" />
+                <video key={src} ref={videoRefs[index]} src={src} muted playsInline className="absolute top-0 left-0 w-full h-full object-cover" />
             ))}
         </div>
     );

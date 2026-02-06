@@ -5,7 +5,7 @@ import useUnreadCount from '../hooks/useUnreadCount.js';
 import SearchBar from './SearchBar'; 
 import { gsap } from 'gsap';
 
-const Logo = () => {
+const Logo = ({ isAdmin }) => {
     const h1Ref = useRef(null);
     const spanRef = useRef(null);
 
@@ -56,23 +56,20 @@ const ProfileAvatar = ({ user }) => {
     );
 };
 
-// Header component now receives search state from App.js
-const Header = ({ user, searchQuery, onSearch }) => {
+const Header = ({ user, isAdmin, searchQuery, onSearch }) => {
   const location = useLocation();
   const unreadMessagesCount = useUnreadCount(user?.uid);
 
-  // Only show the search bar on the homepage
-  const showSearchBar = location.pathname === '/';
+  const showSearchBar = !isAdmin && location.pathname === '/';
 
   return (
     <header className="fixed top-0 left-0 w-full z-40 transition-all duration-300">
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 md:px-6 lg:px-8 backdrop-blur-lg bg-surface/90 border-b border-outline/20">
             
             <div className="flex items-center">
-                <Logo />
+                <Logo isAdmin={isAdmin} />
             </div>
             
-            {/* Centered SearchBar, only on homepage */}
             {user && showSearchBar && (
                 <div className="flex-1 flex justify-center px-2 sm:px-8">
                     <div className="w-full max-w-lg">
@@ -81,10 +78,9 @@ const Header = ({ user, searchQuery, onSearch }) => {
                 </div>
             )}
 
-            {/* User navigation icons */}
             {user ? (
                 <div className="flex items-center justify-end gap-x-2 sm:gap-x-4">
-                    <NavIcon to="/messages" iconName="chat_bubble_outline" badgeCount={unreadMessagesCount} />
+                    {!isAdmin && <NavIcon to="/messages" iconName="chat_bubble_outline" badgeCount={unreadMessagesCount} />}
                     <ProfileAvatar user={user} />
                 </div>
             ) : (

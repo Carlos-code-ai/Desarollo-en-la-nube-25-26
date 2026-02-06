@@ -4,11 +4,12 @@ import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import { AnimatePresence } from 'framer-motion';
 import useAuth from './hooks/useAuth.js';
+import useAdmin from './hooks/useAdmin.js';
 import Header from './components/Header.js';
 import Footer from './components/Footer.js';
 import HomePage from './components/HomePage.js';
-// SearchResults is no longer needed
-// import SearchResults from './components/SearchResults.js'; 
+import AdminRoute from './components/AdminRoute.js';
+import AdminPanel from './pages/AdminPanel.js';
 import SuitDetailPage from './components/SuitDetailPage.js';
 import LoginScreen from './components/LoginScreen.js';
 import ProfileScreen from './components/ProfileScreen.js';
@@ -31,12 +32,12 @@ const ProtectedRoute = ({ user, children }) => {
 
 const App = () => {
     const { user, loading: loadingUser } = useAuth(getAuth());
+    const { isAdmin, loading: loadingAdmin } = useAdmin();
     const location = useLocation();
     
-    // Centralized search query state
     const [searchQuery, setSearchQuery] = useState('');
 
-    if (loadingUser) {
+    if (loadingUser || loadingAdmin) {
         return (
             <div className="w-screen h-screen bg-surface grid place-items-center">
                 <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
@@ -44,19 +45,25 @@ const App = () => {
         );
     }
 
-    const fabVisible = user && ['/', '/profile', '/my-items', '/my-rentals', '/favorites'].includes(location.pathname);
+    const fabVisible = user && !isAdmin && ['/', '/profile', '/my-items', '/my-rentals', '/favorites'].includes(location.pathname);
 
     return (
         <div className="bg-background text-on-background min-h-screen flex flex-col font-sans">
-            {/* Pass search state and handler to Header */}
-            <Header user={user} searchQuery={searchQuery} onSearch={setSearchQuery} />
+            <Header user={user} isAdmin={isAdmin} searchQuery={searchQuery} onSearch={setSearchQuery} />
             <main className="flex-grow w-full pt-20">
                 <AnimatePresence mode="wait">
                     <Routes location={location} key={location.pathname}>
+                        {/* --- Conditional Root Route --- */}
+                        <Route 
+                            path="/" 
+                            element={
+                                isAdmin 
+                                ? <AdminPanel /> 
+                                : <HomePage searchQuery={searchQuery} onSearchClear={() => setSearchQuery('')} />
+                            } 
+                        />
+                        
                         {/* --- Public Routes --- */}
-                        {/* Pass searchQuery to HomePage */}
-                        <Route path="/" element={<HomePage searchQuery={searchQuery} onSearchClear={() => setSearchQuery('')} />} />
-                        {/* The /search route is removed */}
                         <Route path="/suit/:suitId" element={<SuitDetailPage />} />
                         <Route path="/user/:userId" element={<PublicProfilePage />} />
                         <Route path="/login" element={<LoginScreen />} />
@@ -71,6 +78,7 @@ const App = () => {
                         <Route path="/messages" element={<ProtectedRoute user={user}><MessagesPage /></ProtectedRoute>}>
                             <Route path=":chatId" element={<ProtectedRoute user={user}><MessagesPage /></ProtectedRoute>} />
                         </Route>
+                        <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
                     </Routes>
                 </AnimatePresence>
             </main>

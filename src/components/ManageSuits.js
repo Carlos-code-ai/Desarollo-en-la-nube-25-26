@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ref, onValue, remove, update } from 'firebase/database';
 import { rtdb } from '../firebase';
 import { gsap } from 'gsap';
+import ModernDropdown from './ModernDropdown';
 
 const ActionIcon = ({ icon, onClick, colorClass, hoverColorClass }) => {
     const iconRef = useRef(null);
@@ -131,24 +132,36 @@ const ManageSuits = () => {
                                         <td className="p-4"><input name="price" type="number" value={editedData.price} onChange={handleInputChange} className="w-full p-2 bg-surface-container-lowest border border-outline rounded-lg" /></td>
                                         <td className="p-4"><input name="description" value={editedData.description} onChange={handleInputChange} className="w-full p-2 bg-surface-container-lowest border border-outline rounded-lg" /></td>
                                         <td className="p-4">
-                                            <select name="state" value={editedData.state} onChange={handleInputChange} className="w-full p-2 bg-surface-container-lowest border border-outline rounded-lg">
-                                                {suitConditions.map(option => <option key={option} value={option}>{option}</option>)}
-                                            </select>
+                                            <ModernDropdown
+                                                name="state"
+                                                options={suitConditions}
+                                                selected={editedData.state}
+                                                onSelect={handleInputChange}
+                                            />
                                         </td>
                                         <td className="p-4">
-                                            <select name="color" value={editedData.color} onChange={handleInputChange} className="w-full p-2 bg-surface-container-lowest border border-outline rounded-lg">
-                                                {suitColors.map(option => <option key={option} value={option}>{option}</option>)}
-                                            </select>
+                                            <ModernDropdown
+                                                name="color"
+                                                options={suitColors}
+                                                selected={editedData.color}
+                                                onSelect={handleInputChange}
+                                            />
                                         </td>
                                         <td className="p-4">
-                                            <select name="material" value={editedData.material} onChange={handleInputChange} className="w-full p-2 bg-surface-container-lowest border border-outline rounded-lg">
-                                                {suitMaterials.map(option => <option key={option} value={option}>{option}</option>)}
-                                            </select>
+                                            <ModernDropdown
+                                                name="material"
+                                                options={suitMaterials}
+                                                selected={editedData.material}
+                                                onSelect={handleInputChange}
+                                            />
                                         </td>
                                         <td className="p-4">
-                                             <select name="eventType" value={editedData.eventType} onChange={handleInputChange} className="w-full p-2 bg-surface-container-lowest border border-outline rounded-lg">
-                                                {eventTypes.map(option => <option key={option} value={option}>{option}</option>)}
-                                            </select>
+                                             <ModernDropdown
+                                                name="eventType"
+                                                options={eventTypes}
+                                                selected={editedData.eventType}
+                                                onSelect={handleInputChange}
+                                            />
                                         </td>
                                         <td className="p-4 text-right space-x-2">
                                             <button onClick={() => handleSave(suit.id)} className="px-4 py-2 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary-dark transition-colors">Guardar</button>

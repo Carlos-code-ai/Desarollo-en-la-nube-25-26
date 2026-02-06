@@ -2,12 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { ref, onValue, remove, update } from 'firebase/database';
 import { rtdb } from '../firebase';
+import ModernDropdown from './ModernDropdown';
 
 const ManageUsers = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingRowId, setEditingRowId] = useState(null);
     const [editedData, setEditedData] = useState({});
+
+    const userRoles = [
+        { label: 'Usuario', value: 'usuario' },
+        { label: 'Admin', value: 'admin' }
+    ];
 
     useEffect(() => {
         const usersRef = ref(rtdb, 'users');
@@ -89,10 +95,12 @@ const ManageUsers = () => {
                                         <td className="p-4"><input name="email" value={editedData.email} onChange={handleInputChange} className="w-full p-2 bg-surface-container-lowest border border-outline rounded-lg" /></td>
                                         <td className="p-4"><input name="displayName" value={editedData.displayName} onChange={handleInputChange} className="w-full p-2 bg-surface-container-lowest border border-outline rounded-lg" /></td>
                                         <td className="p-4">
-                                            <select name="role" value={editedData.role} onChange={handleInputChange} className="w-full p-2 bg-surface-container-lowest border border-outline rounded-lg">
-                                                <option value="usuario">Usuario</option>
-                                                <option value="admin">Admin</option>
-                                            </select>
+                                            <ModernDropdown
+                                                name="role"
+                                                options={userRoles}
+                                                selected={editedData.role}
+                                                onSelect={handleInputChange}
+                                            />
                                         </td>
                                         <td className="p-4 text-right space-x-2">
                                             <button onClick={() => handleSave(user.uid)} className="px-4 py-2 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary-dark transition-colors">Guardar</button>

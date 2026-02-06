@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import useAuth from '../hooks/useAuth.js';
 import { useNavigate } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';
@@ -7,6 +8,8 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { motion } from 'framer-motion';
+import { rtdb } from '../firebase'; // Import Realtime Database
+import { ref, onValue } from 'firebase/database'; // Import Realtime Database functions
 
 // Import the real data components
 import MyItemsPage from './MyItemsPage.js';
@@ -15,7 +18,6 @@ import MyRentalsPage from './MyRentalsPage.js';
 
 // --- Reusable Components ---
 const ProfileHeader = ({ user, onLogout }) => {
-    // ... (same as before)
     return (
         <header className="relative flex justify-center items-center flex-col w-full text-center p-6 bg-surface-container-lowest pt-20">
             <motion.button 
@@ -43,8 +45,11 @@ const ProfileHeader = ({ user, onLogout }) => {
     );
 };
 
-const ProfileTabs = ({ activeTab, setActiveTab }) => {
-    // ... (same as before)
+const ProfileTabs = ({ activeTab, setActiveTab, userRole }) => {
+    if (userRole === 'admin') {
+        return null; // Don't render tabs for admins
+    }
+
     const tabIconProps = (tabName) => ({
         onClick: () => setActiveTab(tabName),
         color: activeTab === tabName ? 'primary' : 'default',
@@ -89,13 +94,31 @@ const ProfileTabs = ({ activeTab, setActiveTab }) => {
     );
 };
 
-
 // --- Main Profile Screen Component ---
-
 const ProfileScreen = ({ favorites, onToggleFavorite, onSuitSelect }) => {
   const { user, loading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('wardrobe');
+  const [userRole, setUserRole] = useState(null); // State to hold the user's role
+  const [loadingRole, setLoadingRole] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      const userRef = ref(rtdb, `users/${user.uid}`);
+      const unsubscribe = onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+        setUserRole(data?.role || 'usuario'); // Default to 'usuario' if not specified
+        setLoadingRole(false);
+      }, (error) => {
+        console.error("Error fetching user role:", error);
+        setLoadingRole(false);
+      });
+
+      return () => unsubscribe(); // Cleanup listener on unmount
+    } else {
+        setLoadingRole(false);
+    }
+  }, [user]);
 
   const handleLogout = async () => {
       await logout(); 
@@ -107,6 +130,22 @@ const ProfileScreen = ({ favorites, onToggleFavorite, onSuitSelect }) => {
   }
 
   const renderTabContent = () => {
+      // Don't render tab content for admins
+      if (userRole === 'admin') {
+          return (
+            <div className="text-center p-8">
+                <h2 className="text-2xl font-bold text-on-surface">Perfil de Administrador</h2>
+                <p className="text-on-surface-variant mt-2">Accede al panel de administración para gestionar la plataforma.</p>
+                 <button 
+                    onClick={() => navigate('/admin')}
+                    className="mt-6 px-6 py-3 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary-dark transition-colors shadow-lg"
+                >
+                    Ir al Panel de Admin
+                </button>
+            </div>
+          );
+      }
+
       switch(activeTab) {
           case 'wardrobe':
               return <MyItemsPage onAddSuitClick={handleAddSuitClick} onSuitSelect={onSuitSelect} />;
@@ -119,7 +158,7 @@ const ProfileScreen = ({ favorites, onToggleFavorite, onSuitSelect }) => {
       }
   }
 
-  if (authLoading) {
+  if (authLoading || loadingRole) {
     return <div className="w-full flex-grow flex items-center justify-center"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div></div>;
   }
 
@@ -131,7 +170,7 @@ const ProfileScreen = ({ favorites, onToggleFavorite, onSuitSelect }) => {
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col items-center pb-12 min-h-screen bg-surface-container-low">
         <ProfileHeader user={user} onLogout={handleLogout} />
-        <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <ProfileTabs activeTab={activeTab} setActiveTab={setActiveTab} userRole={userRole} />
         <main className="w-full p-4 sm:p-6">
             {renderTabContent()}
         </main>

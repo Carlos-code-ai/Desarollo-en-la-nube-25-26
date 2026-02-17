@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, rtdb } from '../firebase';
 import { 
@@ -11,11 +11,9 @@ import {
 import { ref, set, get, update } from 'firebase/database';
 
 const videos = [
-    "https://firebasestorage.googleapis.com/v0/b/desarollogit-68916509-89c54.appspot.com/o/login-vids%2Fvid-1.mp4?alt=media&token=4044c34a-93a6-4b44-9721-c7c473c46b68",
-    "https://firebasestorage.googleapis.com/v0/b/desarollogit-68916509-89c54.appspot.com/o/login-vids%2Fvid-2.mp4?alt=media&token=e673a5e0-47c2-4809-9b63-0943952f4477",
-    "https://firebasestorage.googleapis.com/v0/b/desarollogit-68916509-89c54.appspot.com/o/login-vids%2Fvid-3.mp4?alt=media&token=18967f8b-c689-48d6-8482-19835e236166",
-    "https://firebasestorage.googleapis.com/v0/b/desarollogit-68916509-89c54.appspot.com/o/login-vids%2Fvid-4.mp4?alt=media&token=4403a486-539c-436d-a6c6-9907e86e58e3",
-    "https://firebasestorage.googleapis.com/v0/b/desarollogit-68916509-89c54.appspot.com/o/login-vids%2Fvid-5.mp4?alt=media&token=d1d234a9-2e78-4389-9b93-68f44a86f12e"
+    "/Aspiracional_un_hombre_1080p_202512241651.mp4",
+    "/Primer_plano_elegante_1080p_202512241650.mp4",
+    "/Visual_un_primer_1080p_202512241703.mp4"
 ];
 
 const LoginScreen = () => {
@@ -27,16 +25,31 @@ const LoginScreen = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const videoRefs = useMemo(() => [], []);
+    const [currentVideo, setCurrentVideo] = useState(0);
+    const [nextVideo, setNextVideo] = useState(1);
+    const [isPrimaryVideoVisible, setIsPrimaryVideoVisible] = useState(true);
+    
+    const videoRef1 = useRef(null);
+    const videoRef2 = useRef(null);
+
+    const handleVideoEnded = () => {
+        setIsPrimaryVideoVisible(!isPrimaryVideoVisible);
+    };
 
     useEffect(() => {
-        videoRefs.forEach(vid => {
-            if (vid) {
-                vid.playbackRate = 0.8;
-                vid.play().catch(e => console.log("Video autoplay failed", e));
-            }
-        });
-    }, [videoRefs]);
+        if (isPrimaryVideoVisible) {
+            setNextVideo((currentVideo + 1) % videos.length);
+        } else {
+            setCurrentVideo((nextVideo + 1) % videos.length);
+        }
+    }, [isPrimaryVideoVisible, currentVideo, nextVideo]);
+
+    useEffect(() => {
+        videoRef1.current?.play().catch(e => console.log("Autoplay 1 failed", e));
+        videoRef2.current?.play().catch(e => console.log("Autoplay 2 failed", e));
+    }, [isPrimaryVideoVisible]);
+    
+    const videoClasses = "absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 transition-opacity duration-1000";
 
     const updateUserProfile = async (user) => {
         const userRef = ref(rtdb, 'users/' + user.uid);
@@ -44,26 +57,17 @@ const LoginScreen = () => {
         const updates = {};
 
         if (snapshot.exists()) {
-            // User exists, update their email if it's missing
             const existingData = snapshot.val();
-            if (!existingData.email && user.email) {
-                updates.email = user.email;
-            }
-            if (!existingData.displayName && user.displayName) {
-                updates.displayName = user.displayName;
-            }
-             if (!existingData.photoURL && user.photoURL) {
-                updates.photoURL = user.photoURL;
-            }
-            if (Object.keys(updates).length > 0) {
-                 await update(userRef, updates);
-            }
+            if (!existingData.email && user.email) updates.email = user.email;
+            if (!existingData.displayName && user.displayName) updates.displayName = user.displayName;
+            if (!existingData.photoURL && user.photoURL) updates.photoURL = user.photoURL;
+            if (Object.keys(updates).length > 0) await update(userRef, updates);
         } else {
-            // New user, set their full profile
-            updates.displayName = user.displayName || name;
-            updates.email = user.email;
-            updates.photoURL = user.photoURL || '';
-            await set(userRef, updates);
+            await set(userRef, {
+                displayName: user.displayName || name,
+                email: user.email,
+                photoURL: user.photoURL || '',
+            });
         }
     };
 
@@ -80,12 +84,11 @@ const LoginScreen = () => {
                     return;
                 }
                 userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                await updateProfile(user, { displayName: name });
-                await updateUserProfile(user); // Use centralized function
+                await updateProfile(userCredential.user, { displayName: name });
+                await updateUserProfile(userCredential.user);
             } else {
                 userCredential = await signInWithEmailAndPassword(auth, email, password);
-                await updateUserProfile(userCredential.user); // Use centralized function
+                await updateUserProfile(userCredential.user);
             }
             navigate('/');
         } catch (err) {
@@ -101,7 +104,7 @@ const LoginScreen = () => {
         try {
             const provider = new GoogleAuthProvider();
             const result = await signInWithPopup(auth, provider);
-            await updateUserProfile(result.user); // Use centralized function
+            await updateUserProfile(result.user);
             navigate('/');
         } catch (err) {
             handleAuthError(err);
@@ -137,13 +140,24 @@ const LoginScreen = () => {
     };
     
     return (
-        <div className="w-full h-screen flex items-center justify-center bg-gray-900">
-            <div className="absolute top-0 left-0 w-full h-full grid grid-cols-5 gap-1 overflow-hidden opacity-50">
-                {videos.map((src, index) => (
-                    <video key={src} ref={el => videoRefs[index] = el} className="w-full h-full object-cover" muted loop playsInline>
-                        <source src={src} type="video/mp4" />
-                    </video>
-                ))}
+        <div className="w-full h-screen flex items-center justify-center bg-black">
+            <div className="absolute inset-0 w-full h-full overflow-hidden">
+                <video 
+                    ref={videoRef1} 
+                    src={videos[currentVideo]} 
+                    className={`${videoClasses} ${isPrimaryVideoVisible ? 'opacity-50' : 'opacity-0'}`} 
+                    muted 
+                    playsInline 
+                    onEnded={handleVideoEnded} 
+                />
+                <video 
+                    ref={videoRef2} 
+                    src={videos[nextVideo]} 
+                    className={`${videoClasses} ${!isPrimaryVideoVisible ? 'opacity-50' : 'opacity-0'}`} 
+                    muted 
+                    playsInline 
+                    onEnded={handleVideoEnded} 
+                />
             </div>
             
             <div className="relative z-10 w-full max-w-md p-8 space-y-4 bg-surface/75 dark:bg-surface-dark/75 backdrop-blur-lg rounded-xl shadow-lg">

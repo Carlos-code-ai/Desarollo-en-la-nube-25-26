@@ -1,162 +1,210 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { auth, rtdb } from '../firebase';
+import { 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    updateProfile, 
+    GoogleAuthProvider, 
+    signInWithPopup 
+} from 'firebase/auth';
+import { ref, set, get, update } from 'firebase/database';
 
-import React, { useRef, useEffect, useState } from 'react';
-import useAuth from '../hooks/useAuth.js';
-import { gsap } from 'gsap';
-
-const VideoBackground = () => {
-    const videos = [
-        "/Aspiracional_un_hombre_1080p_202512241651.mp4",
-        "/Primer_plano_elegante_1080p_202512241650.mp4",
-        "/Visual_un_primer_1080p_202512241703.mp4"
-    ];
-
-    const videoRefs = [useRef(null), useRef(null), useRef(null)];
-
-    useEffect(() => {
-        const players = videoRefs.map(ref => ref.current);
-
-        const playNext = (current) => {
-            const next = (current + 1) % videos.length;
-
-            gsap.to(players[current], { opacity: 0, duration: 1 });
-            gsap.fromTo(players[next], { opacity: 0 }, { opacity: 1, duration: 1 });
-            if (players[next]) {
-                players[next].play();
-            }
-        };
-
-        players.forEach((player, index) => {
-            if (player) {
-                player.addEventListener('ended', () => playNext(index));
-                // Set initial opacity for animation
-                gsap.set(player, { opacity: index === 0 ? 1 : 0 });
-            }
-        });
-
-        // Start the first video
-        if (players[0]) {
-            players[0].play().catch(error => console.error("Video autoplay was prevented:", error));
-        }
-
-        return () => {
-            players.forEach((player, index) => {
-                if (player) {
-                    player.removeEventListener('ended', () => playNext(index));
-                }
-            });
-        };
-    }, [videoRefs, videos.length]);
-
-    return (
-        <div className="absolute top-0 left-0 w-full h-full -z-1 overflow-hidden bg-black">
-            {videos.map((src, index) => (
-                <video key={src} ref={videoRefs[index]} src={src} muted playsInline className="absolute top-0 left-0 w-full h-full object-cover" />
-            ))}
-        </div>
-    );
-}
-
-
-// --- Componentes de la Interfaz ---
-
-const GoogleIcon = () => (
-    <svg className="h-6 w-6" viewBox="0 0 48 48">
-        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-        <path fill="none" d="M0 0h48v48H0z"></path>
-    </svg>
-);
-
-const FloatingLabelInput = ({ label, type = 'text' }) => (
-    <div className="relative w-full">
-        <input 
-            type={type}
-            id={label}
-            className="block w-full px-4 py-3 bg-white/10 rounded-lg border border-white/20 text-white placeholder-transparent focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all peer"
-            placeholder={label}
-        />
-        <label 
-            htmlFor={label} 
-            className="absolute left-4 top-3 text-white/70 transition-all duration-300 pointer-events-none 
-                       peer-placeholder-shown:text-base peer-placeholder-shown:top-3 
-                       peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-primary 
-                       -top-2.5 text-xs"
-        >
-            {label}
-        </label>
-    </div>
-);
-
-
-// --- Pantalla de Login Principal ---
+const videos = [
+    "https://firebasestorage.googleapis.com/v0/b/desarollogit-68916509-89c54.appspot.com/o/login-vids%2Fvid-1.mp4?alt=media&token=4044c34a-93a6-4b44-9721-c7c473c46b68",
+    "https://firebasestorage.googleapis.com/v0/b/desarollogit-68916509-89c54.appspot.com/o/login-vids%2Fvid-2.mp4?alt=media&token=e673a5e0-47c2-4809-9b63-0943952f4477",
+    "https://firebasestorage.googleapis.com/v0/b/desarollogit-68916509-89c54.appspot.com/o/login-vids%2Fvid-3.mp4?alt=media&token=18967f8b-c689-48d6-8482-19835e236166",
+    "https://firebasestorage.googleapis.com/v0/b/desarollogit-68916509-89c54.appspot.com/o/login-vids%2Fvid-4.mp4?alt=media&token=4403a486-539c-436d-a6c6-9907e86e58e3",
+    "https://firebasestorage.googleapis.com/v0/b/desarollogit-68916509-89c54.appspot.com/o/login-vids%2Fvid-5.mp4?alt=media&token=d1d234a9-2e78-4389-9b93-68f44a86f12e"
+];
 
 const LoginScreen = () => {
-  const { user, loading, signInWithGoogle } = useAuth();
-  const buttonRef = useRef(null);
+    const navigate = useNavigate();
+    const [isSignUp, setIsSignUp] = useState(false);
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-  const handleLogin = async () => {
-    gsap.fromTo(buttonRef.current, { scale: 1 }, { scale: 1.05, yoyo: true, repeat: 1, duration: 0.1, ease: 'power1.inOut' });
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      console.error("Error al iniciar sesión con Google:", error);
-    }
-  };
+    const videoRefs = useMemo(() => [], []);
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-900"><div className="text-white text-xl">Cargando...</div></div>;
-  }
+    useEffect(() => {
+        videoRefs.forEach(vid => {
+            if (vid) {
+                vid.playbackRate = 0.8;
+                vid.play().catch(e => console.log("Video autoplay failed", e));
+            }
+        });
+    }, [videoRefs]);
 
-  if (user) {
-    return null; // No renderizar nada si el usuario ya está logueado
-  }
+    const updateUserProfile = async (user) => {
+        const userRef = ref(rtdb, 'users/' + user.uid);
+        const snapshot = await get(userRef);
+        const updates = {};
 
-  return (
-    <div className='min-h-screen w-full flex items-center justify-center p-4 relative'>
-        <VideoBackground />
-        <div className="w-full max-w-md p-8 md:p-12 space-y-8 rounded-2xl bg-black/30 backdrop-blur-xl border border-white/10 shadow-2xl text-white">
-          
-          <div className="text-center animate-fade-in-down-1">
-            <img src="/logo.png" alt="Ready2Wear Logo" className="mx-auto mb-4 h-32 filter-none" />
-            <h1 className="text-3xl font-bold tracking-tighter text-shadow">Ready<span className="text-primary">2</span>Wear</h1>
-          </div>
+        if (snapshot.exists()) {
+            // User exists, update their email if it's missing
+            const existingData = snapshot.val();
+            if (!existingData.email && user.email) {
+                updates.email = user.email;
+            }
+            if (!existingData.displayName && user.displayName) {
+                updates.displayName = user.displayName;
+            }
+             if (!existingData.photoURL && user.photoURL) {
+                updates.photoURL = user.photoURL;
+            }
+            if (Object.keys(updates).length > 0) {
+                 await update(userRef, updates);
+            }
+        } else {
+            // New user, set their full profile
+            updates.displayName = user.displayName || name;
+            updates.email = user.email;
+            updates.photoURL = user.photoURL || '';
+            await set(userRef, updates);
+        }
+    };
 
-          <div className="space-y-6 animate-fade-in-down-2">
-              <FloatingLabelInput label="Correo Electrónico" type="email" />
-              <FloatingLabelInput label="Contraseña" type="password" />
-          </div>
-          
-          <div className="space-y-4 animate-fade-in-down-3">
-              <button 
-                  className='w-full bg-primary text-on-primary font-bold py-3 px-6 rounded-full transition-transform hover:scale-105 active:scale-100 shadow-lg'
-              >
-                  Iniciar Sesión
-              </button>
+    const handleAuth = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        try {
+            let userCredential;
+            if (isSignUp) {
+                if (!name) {
+                    setError('Por favor, introduce tu nombre.');
+                    setLoading(false);
+                    return;
+                }
+                userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                await updateProfile(user, { displayName: name });
+                await updateUserProfile(user); // Use centralized function
+            } else {
+                userCredential = await signInWithEmailAndPassword(auth, email, password);
+                await updateUserProfile(userCredential.user); // Use centralized function
+            }
+            navigate('/');
+        } catch (err) {
+            handleAuthError(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-              <div className="relative flex items-center py-2">
-                  <div className="flex-grow border-t border-white/20"></div>
-                  <span className="flex-shrink mx-4 text-sm text-white/70">O continua con</span>
-                  <div className="flex-grow border-t border-white/20"></div>
-              </div>
+    const handleGoogleSignIn = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const provider = new GoogleAuthProvider();
+            const result = await signInWithPopup(auth, provider);
+            await updateUserProfile(result.user); // Use centralized function
+            navigate('/');
+        } catch (err) {
+            handleAuthError(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-              <button 
-                ref={buttonRef}
-                onClick={handleLogin} 
-                className='w-full bg-white/90 text-gray-800 font-bold py-3 px-6 rounded-full flex items-center justify-center space-x-3 transition-transform hover:scale-105 active:scale-100 shadow-lg'
-              >
-                <GoogleIcon />
-                <span>Continuar con Google</span>
-              </button>
-          </div>
+    const handleAuthError = (err) => {
+        let friendlyMessage = 'Ha ocurrido un error. Por favor, inténtalo de nuevo.';
+        switch (err.code) {
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+                friendlyMessage = 'El correo electrónico o la contraseña son incorrectos.';
+                break;
+            case 'auth/email-already-in-use':
+                friendlyMessage = 'Este correo electrónico ya está registrado. Por favor, inicia sesión.';
+                break;
+            case 'auth/weak-password':
+                friendlyMessage = 'La contraseña es demasiado débil. Debe tener al menos 6 caracteres.';
+                break;
+            case 'auth/invalid-email':
+                friendlyMessage = 'El formato del correo electrónico no es válido.';
+                break;
+            case 'auth/popup-closed-by-user':
+                friendlyMessage = 'El proceso de inicio de sesión fue cancelado.';
+                break;
+            default:
+                console.error("Auth error:", err);
+                break;
+        }
+        setError(friendlyMessage);
+    };
+    
+    return (
+        <div className="w-full h-screen flex items-center justify-center bg-gray-900">
+            <div className="absolute top-0 left-0 w-full h-full grid grid-cols-5 gap-1 overflow-hidden opacity-50">
+                {videos.map((src, index) => (
+                    <video key={src} ref={el => videoRefs[index] = el} className="w-full h-full object-cover" muted loop playsInline>
+                        <source src={src} type="video/mp4" />
+                    </video>
+                ))}
+            </div>
+            
+            <div className="relative z-10 w-full max-w-md p-8 space-y-4 bg-surface/75 dark:bg-surface-dark/75 backdrop-blur-lg rounded-xl shadow-lg">
+                <h1 className="text-3xl font-bold text-center text-on-surface dark:text-on-surface-dark">
+                    {isSignUp ? 'Crear Cuenta' : 'Bienvenido'}
+                </h1>
+                <form onSubmit={handleAuth} className="space-y-4">
+                    {isSignUp && (
+                        <input
+                            type="text"
+                            placeholder="Nombre"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            className="w-full px-4 py-2 text-on-surface bg-surface-container-highest rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                    )}
+                    <input
+                        type="email"
+                        placeholder="Correo electrónico"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="w-full px-4 py-2 text-on-surface bg-surface-container-highest rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <input
+                        type="password"
+                        placeholder="Contraseña"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="w-full px-4 py-2 text-on-surface bg-surface-container-highest rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    {error && <p className="text-sm text-center text-error">{error}</p>}
+                    <button type="submit" disabled={loading} className="w-full py-3 font-bold text-on-primary bg-primary rounded-full hover:bg-primary/90 disabled:bg-on-surface/20">
+                        {loading ? 'Cargando...' : (isSignUp ? 'Registrarse' : 'Entrar')}
+                    </button>
+                </form>
+                
+                <div className="flex items-center justify-center space-x-2">
+                    <hr className="w-full border-outline-variant"/>
+                    <span className="px-2 text-sm text-on-surface-variant">O</span>
+                    <hr className="w-full border-outline-variant"/>
+                </div>
 
-          <p className="text-center text-xs text-white/50 animate-fade-in-down-4">
-              ¿Aún no tienes cuenta? <a href="#" className="font-semibold text-primary hover:underline">Regístrate</a>
-          </p>
+                <button onClick={handleGoogleSignIn} disabled={loading} className="w-full py-3 font-bold text-primary bg-primary-container rounded-full hover:bg-primary-container/90 disabled:bg-on-surface/20 flex items-center justify-center">
+                     <svg className="w-5 h-5 mr-3" viewBox="0 0 48 48">
+                        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C43.021,36.251,44,30.423,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+                    </svg>
+                    Continuar con Google
+                </button>
+
+                <p className="text-sm text-center text-on-surface-variant">
+                    {isSignUp ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?'}
+                    <a href="#" onClick={(e) => { e.preventDefault(); setIsSignUp(!isSignUp); setError(''); }} className="font-bold text-primary hover:underline ml-1">
+                        {isSignUp ? 'Inicia sesión' : 'Regístrate'}
+                    </a>
+                </p>
+            </div>
         </div>
-    </div>
-  );
+    );
 };
 
 export default LoginScreen;

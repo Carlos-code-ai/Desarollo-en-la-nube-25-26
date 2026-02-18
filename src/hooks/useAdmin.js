@@ -13,22 +13,17 @@ const useAdmin = () => {
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        if (user.email === 'cllabresllovet@gmail.com') {
-          setIsAdmin(true);
+        const userRoleRef = ref(db, `users/${user.uid}/role`);
+        const unsubscribeRole = onValue(userRoleRef, (snapshot) => {
+          const userRole = snapshot.val();
+          setIsAdmin(userRole === 'admin');
           setLoading(false);
-        } else {
-          const userRoleRef = ref(db, `users/${user.uid}/role`);
-          const unsubscribeRole = onValue(userRoleRef, (snapshot) => {
-            const userRole = snapshot.val();
-            setIsAdmin(userRole === 'admin');
-            setLoading(false);
-          }, (error) => {
-            console.error("Error fetching admin status:", error);
-            setIsAdmin(false);
-            setLoading(false);
-          });
-          return () => unsubscribeRole();
-        }
+        }, (error) => {
+          console.error("Error fetching admin status:", error);
+          setIsAdmin(false);
+          setLoading(false);
+        });
+        return () => unsubscribeRole();
       } else {
         setIsAdmin(false);
         setLoading(false);

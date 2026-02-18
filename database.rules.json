@@ -1,16 +1,28 @@
 {
   "rules": {
+    "admins": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('admins/' + auth.uid).val() === true"
+    },
     "users": {
-      ".read": true,
+      ".read": "auth != null",
       "$uid": {
-        ".write": "auth != null && auth.uid === $uid"
+        ".read": "auth != null && (root.child('admins/' + auth.uid).val() === true || auth.uid === $uid)",
+        ".write": "auth.uid === $uid || root.child('admins/' + auth.uid).val() === true",
+        "favorites": {
+          ".read": "auth != null && (auth.uid === $uid || root.child('admins/' + auth.uid).val() === true)",
+          ".write": "auth != null && auth.uid === $uid"
+        },
+        "role": {
+          ".read": "auth != null"
+        }
       }
     },
     "trajes": {
       ".read": true,
       ".indexOn": ["ownerId", "size", "price", "state", "eventType"],
       "$suitId": {
-        ".write": "auth != null && (newData.child('ownerId').val() === auth.uid || !data.exists())",
+        ".write": "auth != null && (newData.child('ownerId').val() === auth.uid || !data.exists() || root.child('admins/' + auth.uid).val() === true)",
         ".validate": "newData.hasChildren(['name', 'size', 'price', 'description', 'imageUrl', 'ownerId', 'ownerName', 'ownerPhotoURL', 'state', 'eventType'])"
       }
     },
@@ -25,7 +37,7 @@
     },
     "chats": {
       ".read": "auth != null",
-      ".indexOn": ["suitId", "timestamp"],
+      ".indexOn": ["suitId", "timestamp", "memberKey_suitId"],
       "$chatId": {
         ".read": "data.child('members').child(auth.uid).exists()",
         ".write": "auth != null && (newData.child('members').child(auth.uid).exists() || !data.exists())",
@@ -39,14 +51,8 @@
         ".indexOn": "timestamp"
       }
     },
-    "favorites": {
-        "$userId": {
-            ".read": "auth != null && auth.uid === $userId",
-            ".write": "auth != null && auth.uid === $userId"
-        }
-    },
     "reports": {
-      ".read": "root.child('users/' + auth.uid + '/role').val() === 'admin'",
+      ".read": "root.child('admins/' + auth.uid).val() === true",
       ".indexOn": ["status"],
       "$reportId": {
         ".write": "auth != null",

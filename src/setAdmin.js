@@ -17,7 +17,7 @@ if (!email) {
 async function setAdminRole() {
   try {
     const user = await admin.auth().getUserByEmail(email);
-    await admin.database().ref(`users/${user.uid}`).update({ role: 'admin' });
+    await admin.database().ref(`admins/${user.uid}`).set(true);
     console.log(`Successfully set admin role for ${email}`);
   } catch (error) {
     console.error('Error setting admin role:', error);

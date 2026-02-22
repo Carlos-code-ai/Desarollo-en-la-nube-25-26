@@ -4,6 +4,8 @@ import { ref, onValue, remove, update } from 'firebase/database';
 import { rtdb } from '../firebase';
 import ModernDropdown from './ModernDropdown';
 import useAdmin from '../hooks/useAdmin'; // Import useAdmin
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const ManageUsers = () => {
     const { isAdmin, loading: adminLoading } = useAdmin(); // Use the hook
@@ -147,9 +149,13 @@ const ManageUsers = () => {
                                         <td className="p-4">{user.email}</td>
                                         <td className="p-4">{user.displayName}</td>
                                         <td className="p-4 capitalize">{user.role}</td>
-                                        <td className="p-4 text-right space-x-2">
-                                            <button onClick={() => handleEdit(user)} className="px-4 py-2 rounded-full bg-tertiary-container text-on-tertiary-container font-semibold hover:bg-tertiary-container-high transition-colors">Editar</button>
-                                            <button onClick={() => handleDelete(user.uid)} className="px-4 py-2 rounded-full bg-error-container text-on-error-container font-semibold hover:bg-error-container-high transition-colors">Borrar</button>
+                                        <td className="p-4 text-right space-x-4">
+                                            <button onClick={() => handleEdit(user)} className="text-on-surface-variant hover:text-primary transition-colors">
+                                                <EditIcon />
+                                            </button>
+                                            <button onClick={() => handleDelete(user.uid)} className="text-on-surface-variant hover:text-error transition-colors">
+                                                <DeleteIcon />
+                                            </button>
                                         </td>
                                     </>
                                 )}
